@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ELECTROLOYAL - Electronics Retail Customer Loyalty Management System</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
+        <div class="logo-text">
+          <h2>ELECTROLOYAL</h2>
+          <p>Electronics Loyalty System</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="nav-item active" data-page="dashboard">
+            <a href="#"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a>
+          </li>
+          <li class="nav-item" data-page="customers">
+            <a href="#"><i class="fa-solid fa-users"></i> <span>Customers</span></a>
+          </li>
+          <li class="nav-item" data-page="products">
+            <a href="#"><i class="fa-solid fa-box-open"></i> <span>Products</span></a>
+          </li>
+          <li class="nav-item" data-page="membership">
+            <a href="#"><i class="fa-solid fa-crown"></i> <span>Membership</span></a>
+          </li>
+          <li class="nav-item" data-page="rewards">
+            <a href="#"><i class="fa-solid fa-gift"></i> <span>Rewards</span></a>
+          </li>
+          <li class="nav-item" data-page="transactions">
+            <a href="#"><i class="fa-solid fa-receipt"></i> <span>Transactions</span></a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="admin-badge">
+          <div class="avatar"><i class="fa-solid fa-user-shield"></i></div>
+          <div class="admin-info">
+            <h4>Admin</h4>
+            <p>Electronics Store</p>
+          </div>
+        </div>
+        <button id="backupBtn" class="btn-backup-trigger" title="Backup & Restore Data">
+          <i class="fa-solid fa-database"></i> Backup / Data
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div class="header-title">
+          <h1 id="headerTitle">Dashboard</h1>
+          <p id="headerSubtitle">Overview of store sales, customer loyalty, and rewards</p>
+        </div>
+        <div class="header-actions">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="globalSearch" placeholder="Search customers, products...">
+          </div>
+          <div class="header-icon-btn notification-btn" title="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            <span class="badge-dot"></span>
+          </div>
+          <div class="user-profile">
+            <img src="https://ui-avatars.com/api/?name=Admin+Manager&background=6D5DFB&color=fff" alt="Admin Avatar">
+            <span>Store Manager</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- VIEW SECTIONS -->
+
+      <!-- 1. DASHBOARD VIEW -->
+      <section id="view-dashboard" class="page-view active">
+        <!-- Dynamic Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-details">
+              <h3>Total Customers</h3>
+              <p class="stat-value" id="dashTotalCustomers">0</p>
+              <span class="stat-desc"><i class="fa-solid fa-arrow-up text-success"></i> Active members</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon gold"><i class="fa-solid fa-coins"></i></div>
+            <div class="stat-details">
+              <h3>Total Points Issued</h3>
+              <p class="stat-value" id="dashTotalPoints">0</p>
+              <span class="stat-desc">₹500 spent = 10 pts</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-gift"></i></div>
+            <div class="stat-details">
+              <h3>Active Rewards</h3>
+              <p class="stat-value" id="dashActiveRewards">0</p>
+              <span class="stat-desc">Unlocked for members</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+            <div class="stat-details">
+              <h3>Total Sales</h3>
+              <p class="stat-value" id="dashTotalSales">₹0</p>
+              <span class="stat-desc">Lifetime revenue</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- Recent Activity -->
+          <div class="card grid-col-8">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-clock-rotate-left"></i> Recent Customer Activity</h2>
+              <button class="btn-link" onclick="navigateTo('transactions')">View All</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Amount</th>
+                    <th>Points</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="dashRecentActivityTable">
+                  <!-- Dynamic Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Membership Distribution -->
+          <div class="card grid-col-4">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-chart-bar"></i> Membership Tiers</h2>
+            </div>
+            <div class="membership-distribution">
+              <div class="dist-item">
+                <div class="dist-info">
+                  <span class="tier-badge bronze"><i class="fa-solid fa-shield"></i> Bronze</span>
+                  <span id="countBronze">0</span>
+                </div>
+                <div class="dist-bar"><div id="barBronze" class="dist-fill bronze" style="width: 0%"></div></div>
+              </div>
+
+              <div class="dist-item">
+                <div class="dist-info">
+                  <span class="tier-badge silver"><i class="fa-solid fa-shield-halved"></i> Silver</span>
+                  <span id="countSilver">0</span>
+                </div>
+                <div class="dist-bar"><div id="barSilver" class="dist-fill silver" style="width: 0%"></div></div>
+              </div>
+
+              <div class="dist-item">
+                <div class="dist-info">
+                  <span class="tier-badge gold"><i class="fa-solid fa-crown"></i> Gold</span>
+                  <span id="countGold">0</span>
+                </div>
+                <div class="dist-bar"><div id="barGold" class="dist-fill gold" style="width: 0%"></div></div>
+              </div>
+
+              <div class="dist-item">
+                <div class="dist-info">
+                  <span class="tier-badge diamond"><i class="fa-solid fa-gem"></i> Diamond</span>
+                  <span id="countDiamond">0</span>
+                </div>
+                <div class="dist-bar"><div id="barDiamond" class="dist-fill diamond" style="width: 0%"></div></div>
+              </div>
+            </div>
+
+            <div class="rule-box mt-4">
+              <h4><i class="fa-solid fa-circle-info"></i> Spending Tiers</h4>
+              <p>Bronze: ₹0 – ₹2,499</p>
+              <p>Silver: ₹2,500 – ₹4,999</p>
+              <p>Gold: ₹5,000 – ₹9,999</p>
+              <p>Diamond: ₹10,000+</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. CUSTOMERS VIEW -->
+      <section id="view-customers" class="page-view">
+        <div class="page-actions-bar">
+          <div class="search-filter-group">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="customerSearchInput" placeholder="Search by name, customer ID (ELC-...), or phone...">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="openAddCustomerModalBtn">
+            <i class="fa-solid fa-user-plus"></i> + Add Customer
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Customer Name</th>
+                  <th>Customer ID</th>
+                  <th>Contact Information</th>
+                  <th>Membership</th>
+                  <th>Total Spending</th>
+                  <th>Points</th>
+                  <th>Rewards</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="customersTableBody">
+                <!-- Dynamic Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. CUSTOMER PROFILE DETAILED VIEW -->
+      <section id="view-customer-profile" class="page-view">
+        <button class="btn btn-secondary mb-3" onclick="navigateTo('customers')">
+          <i class="fa-solid fa-arrow-left"></i> Back to Customers
+        </button>
+
+        <div class="profile-header-card card">
+          <div class="profile-main">
+            <div class="profile-avatar-large" id="profAvatar">JD</div>
+            <div class="profile-details">
+              <div class="profile-title-row">
+                <h2 id="profName">Customer Name</h2>
+                <span id="profMembershipBadge" class="tier-badge bronze">Bronze</span>
+              </div>
+              <p class="prof-id"><i class="fa-solid fa-id-card"></i> <span id="profId">ELC-000001</span></p>
+              <div class="prof-meta">
+                <span><i class="fa-solid fa-envelope"></i> <span id="profEmail">email@example.com</span></span>
+                <span><i class="fa-solid fa-phone"></i> <span id="profPhone">+91 9876543210</span></span>
+                <span><i class="fa-solid fa-cake-candles"></i> DOB: <span id="profDob">1995-05-15</span></span>
+              </div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="btn btn-primary btn-lg" id="profAddPurchaseBtn">
+              <i class="fa-solid fa-cart-plus"></i> + Add Purchase
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="stats-grid mb-4">
+          <div class="stat-card">
+            <div class="stat-icon gold"><i class="fa-solid fa-coins"></i></div>
+            <div class="stat-details">
+              <h3>Current Points</h3>
+              <p class="stat-value" id="profPoints">0</p>
+              <span class="stat-desc">Points available</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-wallet"></i></div>
+            <div class="stat-details">
+              <h3>Total Spending</h3>
+              <p class="stat-value" id="profSpending">₹0</p>
+              <span class="stat-desc">Lifetime purchase value</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div class="stat-details">
+              <h3>Total Purchases</h3>
+              <p class="stat-value" id="profPurchasesCount">0</p>
+              <span class="stat-desc">Transactions completed</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-award"></i></div>
+            <div class="stat-details">
+              <h3>Unlocked Rewards</h3>
+              <p class="stat-value" id="profRewardsCount">0</p>
+              <span class="stat-desc">Unlocked perks</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Membership Progress Card -->
+        <div class="card mb-4">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-shield-halved"></i> Membership Tier Progress</h2>
+            <span id="profCurrentTierLabel" class="tier-badge gold">Gold Tier</span>
+          </div>
+          <div class="progress-container">
+            <div class="progress-labels">
+              <span id="profProgressCurrent">₹0</span>
+              <span id="profProgressTarget">₹10,000</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="profProgressBarFill" class="progress-bar-fill" style="width: 50%;"></div>
+            </div>
+            <p id="profProgressText" class="progress-text">₹2,800 more to reach Diamond</p>
+          </div>
+        </div>
+
+        <div class="grid-2-col">
+          <!-- Unlocked Rewards List -->
+          <div class="card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-gift"></i> Unlocked Customer Rewards</h2>
+            </div>
+            <div id="profRewardsList" class="rewards-mini-list">
+              <!-- Dynamic Rewards -->
+            </div>
+          </div>
+
+          <!-- Purchase History -->
+          <div class="card">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-history"></i> Purchase History</h2>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Qty</th>
+                    <th>Amount</th>
+                    <th>Pay Method</th>
+                    <th>Points</th>
+                    <th>Date</th>
+                  </tr>
+                </thead>
+                <tbody id="profPurchaseHistoryBody">
+                  <!-- Dynamic History Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. PRODUCTS VIEW -->
+      <section id="view-products" class="page-view">
+        <div class="page-actions-bar">
+          <div class="search-filter-group flex-wrap">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="productSearchInput" placeholder="Search products...">
+            </div>
+            <select id="productCategoryFilter" class="form-select">
+              <option value="All">All Categories</option>
+              <option value="Smartphones">Smartphones</option>
+              <option value="Earbuds & Headphones">Earbuds & Headphones</option>
+              <option value="Smartwatches">Smartwatches</option>
+              <option value="Speakers">Speakers</option>
+              <option value="Laptops">Laptops</option>
+              <option value="Tablets">Tablets</option>
+              <option value="Keyboards">Keyboards</option>
+              <option value="Mice">Mice</option>
+              <option value="Gaming">Gaming</option>
+              <option value="Accessories">Accessories</option>
+            </select>
+            <select id="productPriceFilter" class="form-select">
+              <option value="All">All Price Ranges</option>
+              <option value="under5000">Under ₹5,000</option>
+              <option value="5000-20000">₹5,000 – ₹20,000</option>
+              <option value="20000-50000">₹20,000 – ₹50,000</option>
+              <option value="above50000">Above ₹50,000</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" id="openAddProductModalBtn">
+            <i class="fa-solid fa-plus"></i> Add Product
+          </button>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="productsGrid">
+          <!-- Dynamic Product Cards -->
+        </div>
+      </section>
+
+      <!-- 5. PRODUCT DETAIL VIEW SECTION -->
+      <section id="view-product-detail" class="page-view">
+        <button class="btn btn-secondary mb-3" id="backFromProductDetailBtn" onclick="navigateTo('products')">
+          <i class="fa-solid fa-arrow-left"></i> Back
+        </button>
+
+        <div class="card product-detail-card">
+          <div class="product-detail-layout">
+            <div class="product-detail-img-wrap">
+              <img id="detailImg" src="" alt="Product Image">
+            </div>
+            <div class="product-detail-info">
+              <span id="detailCategory" class="badge-cat">Category</span>
+              <h1 id="detailName">Product Name</h1>
+              <p class="prof-id" id="detailProductId" style="margin-top:-8px;margin-bottom:12px;"><i class="fa-solid fa-barcode"></i> <span>PRD-000001</span></p>
+              <div class="product-price-row">
+                <span id="detailPrice" class="detail-price">₹0</span>
+                <span id="detailPoints" class="detail-points-badge"><i class="fa-solid fa-coins"></i> 0 Points</span>
+              </div>
+
+              <div id="detailStockBadge" class="stock-badge in-stock">
+                <i class="fa-solid fa-circle-check"></i> Stock: <span id="detailStockCount">0</span> units
+              </div>
+
+              <div id="detailOfferBox" class="offer-box">
+                <i class="fa-solid fa-tags"></i>
+                <div>
+                  <strong>Membership Offer:</strong>
+                  <p id="detailOfferText">None</p>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <h3>Description</h3>
+                <p id="detailDescription">Product description goes here...</p>
+              </div>
+
+              <div class="detail-section">
+                <h3>Key Specifications</h3>
+                <ul id="detailSpecs" class="specs-list">
+                  <!-- Dynamic Specs -->
+                </ul>
+              </div>
+
+              <div class="detail-actions">
+                <button class="btn btn-primary btn-lg" id="detailAddPurchaseBtn">
+                  <i class="fa-solid fa-cart-plus"></i> Buy for Customer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. MEMBERSHIP PAGE -->
+      <section id="view-membership" class="page-view">
+        <div class="membership-banner card mb-4">
+          <i class="fa-solid fa-circle-info text-purple"></i>
+          <div>
+            <h3>Spending-Based Membership Tiers</h3>
+            <p>Membership is automatically upgraded based strictly on lifetime <strong>Total Spending</strong> (NOT loyalty points). Every purchase instantly updates customer tier status.</p>
+          </div>
+        </div>
+
+        <div class="tiers-grid">
+          <!-- BRONZE -->
+          <div class="tier-card border-bronze">
+            <div class="tier-card-header bronze">
+              <i class="fa-solid fa-shield"></i>
+              <h2>BRONZE</h2>
+              <span class="tier-spending-range">₹0 – ₹2,499</span>
+            </div>
+            <div class="tier-card-body">
+              <h4>Benefits & Perks:</h4>
+              <ul>
+                <li><i class="fa-solid fa-check text-purple"></i> Basic store promotional offers</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Special Birthday reward offer</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Earn 10 points per ₹500 spent</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- SILVER -->
+          <div class="tier-card border-silver">
+            <div class="tier-card-header silver">
+              <i class="fa-solid fa-shield-halved"></i>
+              <h2>SILVER</h2>
+              <span class="tier-spending-range">₹2,500 – ₹4,999</span>
+            </div>
+            <div class="tier-card-body">
+              <h4>Benefits & Perks:</h4>
+              <ul>
+                <li><i class="fa-solid fa-check text-purple"></i> 5% discount on selected eligible products</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Special seasonal sales offers</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Priority customer support</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- GOLD -->
+          <div class="tier-card border-gold">
+            <div class="tier-card-header gold">
+              <i class="fa-solid fa-crown"></i>
+              <h2>GOLD</h2>
+              <span class="tier-spending-range">₹5,000 – ₹9,999</span>
+            </div>
+            <div class="tier-card-body">
+              <h4>Benefits & Perks:</h4>
+              <ul>
+                <li><i class="fa-solid fa-check text-purple"></i> 10% discount on selected eligible products</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Exclusive free gift on qualifying purchases</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Early access to selected new product launches</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- DIAMOND -->
+          <div class="tier-card border-diamond">
+            <div class="tier-card-header diamond">
+              <i class="fa-solid fa-gem"></i>
+              <h2>DIAMOND</h2>
+              <span class="tier-spending-range">₹10,000+</span>
+            </div>
+            <div class="tier-card-body">
+              <h4>Benefits & Perks:</h4>
+              <ul>
+                <li><i class="fa-solid fa-check text-purple"></i> 15% discount on selected eligible products</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Premium gift package on qualifying purchases</li>
+                <li><i class="fa-solid fa-check text-purple"></i> VIP early access to all new flagship launches</li>
+                <li><i class="fa-solid fa-check text-purple"></i> Exclusive Diamond-only deals and rewards</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. REWARDS PAGE -->
+      <section id="view-rewards" class="page-view">
+        <div class="rewards-grid" id="rewardsCatalogueGrid">
+          <!-- Dynamic Rewards Catalog -->
+        </div>
+      </section>
+
+      <!-- 8. TRANSACTIONS VIEW -->
+      <section id="view-transactions" class="page-view">
+        <div class="page-actions-bar">
+          <div class="search-input-wrap width-full">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="transactionSearchInput" placeholder="Search by customer name, product, or transaction ID (TXN-...)...">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Customer</th>
+                  <th>Product</th>
+                  <th>Qty</th>
+                  <th>Amount</th>
+                  <th>Payment</th>
+                  <th>Points</th>
+                  <th>Date</th>
+                  <th>Reward Activity</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTableBody">
+                <!-- Dynamic Transaction Rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODALS -->
+
+  <!-- ADD / EDIT CUSTOMER MODAL -->
+  <div class="modal-overlay" id="customerModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="customerModalTitle">Add New Customer</h3>
+        <button class="modal-close" onclick="closeModal('customerModal')">&times;</button>
+      </div>
+      <form id="customerForm">
+        <input type="hidden" id="custEditId">
+        <div class="form-group">
+          <label for="custName">Full Name *</label>
+          <input type="text" id="custName" required placeholder="e.g. Rahul Sharma">
+        </div>
+        <div class="form-group">
+          <label for="custEmail">Email Address *</label>
+          <input type="email" id="custEmail" required placeholder="e.g. rahul@example.com">
+        </div>
+        <div class="form-group">
+          <label for="custPhone">Phone Number *</label>
+          <input type="tel" id="custPhone" required placeholder="e.g. 9876543210">
+        </div>
+        <div class="form-group">
+          <label for="custDob">Date of Birth *</label>
+          <input type="date" id="custDob" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveCustomerBtn">Save Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADD PURCHASE MODAL -->
+  <div class="modal-overlay" id="purchaseModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-cart-plus text-purple"></i> Record Purchase</h3>
+        <button class="modal-close" onclick="closeModal('purchaseModal')">&times;</button>
+      </div>
+      <form id="purchaseForm">
+        <div class="form-group">
+          <label for="purchCustomerSelect">Customer *</label>
+          <select id="purchCustomerSelect" class="form-select" required>
+            <!-- Dynamic Customers Option -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="purchProductSelect">Select Product *</label>
+          <select id="purchProductSelect" class="form-select" required>
+            <!-- Dynamic Products Option -->
+          </select>
+        </div>
+        <div class="form-row grid-2-col">
+          <div class="form-group">
+            <label for="purchQty">Quantity *</label>
+            <input type="number" id="purchQty" min="1" value="1" required>
+          </div>
+          <div class="form-group">
+            <label for="purchPayment">Payment Method *</label>
+            <select id="purchPayment" class="form-select" required>
+              <option value="Online">Online / Card / UPI</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="purchDate">Date *</label>
+          <input type="date" id="purchDate" required>
+        </div>
+
+        <!-- Calculated Summary Box -->
+        <div class="calculation-summary-box">
+          <div class="calc-row">
+            <span>Unit Price:</span>
+            <strong id="calcUnitPrice">₹0</strong>
+          </div>
+          <div class="calc-row">
+            <span>Total Amount:</span>
+            <strong id="calcTotalAmount" class="text-purple">₹0</strong>
+          </div>
+          <div class="calc-row">
+            <span>Loyalty Points Earned:</span>
+            <strong id="calcPointsEarned" class="text-gold">+0 Points</strong>
+          </div>
+          <div class="calc-note">
+            <i class="fa-solid fa-lightbulb"></i> Points Formula: Math.floor(Amount / 500) * 10
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('purchaseModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="submitPurchaseBtn">Complete Purchase</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BACKUP / DATA MANAGEMENT MODAL -->
+  <div class="modal-overlay" id="backupModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-database text-purple"></i> System Data Backup & Restore</h3>
+        <button class="modal-close" onclick="closeModal('backupModal')">&times;</button>
+      </div>
+      <div class="backup-options-body">
+        <div class="backup-card">
+          <h4><i class="fa-solid fa-download text-purple"></i> Export Data</h4>
+          <p>Download all stored customers, transactions, and product stock updates as a JSON file.</p>
+          <button class="btn btn-primary" onclick="exportData()"><i class="fa-solid fa-file-export"></i> Export JSON</button>
+        </div>
+
+        <div class="backup-card">
+          <h4><i class="fa-solid fa-upload text-blue"></i> Import Data</h4>
+          <p>Restore system data from a previously exported JSON backup file.</p>
+          <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(event)">
+          <button class="btn btn-secondary" onclick="document.getElementById('importFileInput').click()"><i class="fa-solid fa-file-import"></i> Import JSON</button>
+        </div>
+
+        <div class="backup-card border-danger">
+          <h4 class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> Reset System</h4>
+          <p>Clear all local data and restore initial default demo customers & transactions.</p>
+          <button class="btn btn-danger" onclick="clearDemoData()"><i class="fa-solid fa-trash-can"></i> Reset Demo Data</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('backupModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD / EDIT PRODUCT MODAL -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-header">
+        <h3 id="productModalTitle"><i class="fa-solid fa-box-open text-purple"></i> Add New Product</h3>
+        <button class="modal-close" onclick="closeModal('productModal')">&times;</button>
+      </div>
+      <form id="productForm">
+        <input type="hidden" id="prodEditId">
+        <div class="form-row grid-2-col">
+          <div class="form-group">
+            <label for="prodName">Product Name *</label>
+            <input type="text" id="prodName" required placeholder="e.g. UltraSound X">
+          </div>
+          <div class="form-group">
+            <label for="prodCategory">Category *</label>
+            <select id="prodCategory" class="form-select" required>
+              <option value="">-- Select Category --</option>
+              <option value="Smartphones">Smartphones</option>
+              <option value="Earbuds & Headphones">Earbuds & Headphones</option>
+              <option value="Smartwatches">Smartwatches</option>
+              <option value="Speakers">Speakers</option>
+              <option value="Laptops">Laptops</option>
+              <option value="Tablets">Tablets</option>
+              <option value="Keyboards">Keyboards</option>
+              <option value="Mice">Mice</option>
+              <option value="Gaming">Gaming</option>
+              <option value="Accessories">Accessories</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row grid-2-col">
+          <div class="form-group">
+            <label for="prodPrice">Price (₹) *</label>
+            <input type="number" id="prodPrice" min="1" required placeholder="e.g. 7499">
+          </div>
+          <div class="form-group">
+            <label for="prodStock">Stock Quantity *</label>
+            <input type="number" id="prodStock" min="0" required placeholder="e.g. 10">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="prodImageInput">Product Image</label>
+          <div class="image-upload-area">
+            <input type="file" id="prodImageInput" accept="image/*" style="display:none;" onchange="handleProductImagePreview(event)">
+            <div class="image-preview-box" id="prodImagePreviewBox" onclick="document.getElementById('prodImageInput').click()">
+              <img id="prodImagePreview" src="" alt="Preview" style="display:none;">
+              <div id="prodImagePlaceholder" class="upload-placeholder">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Click to upload product image</span>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="prodImageData">
+        </div>
+
+        <div class="form-group">
+          <label for="prodDescription">Description</label>
+          <textarea id="prodDescription" rows="3" placeholder="Short product description..." class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="prodSpecs">Specifications <small style="color:#6B7280;">(one per line)</small></label>
+          <textarea id="prodSpecs" rows="4" placeholder="e.g.&#10;60W Output&#10;20 Hours Battery&#10;Bluetooth 5.3" class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-row grid-2-col">
+          <div class="form-group">
+            <label for="prodEligibility">Membership Eligibility</label>
+            <select id="prodEligibility" class="form-select">
+              <option value="None">None (All Customers)</option>
+              <option value="Silver">Silver & Above</option>
+              <option value="Gold">Gold & Above</option>
+              <option value="Diamond">Diamond Only</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="prodDiscount">Membership Discount</label>
+            <select id="prodDiscount" class="form-select">
+              <option value="None">No Discount</option>
+              <option value="5">5% OFF</option>
+              <option value="10">10% OFF</option>
+              <option value="15">15% OFF</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('productModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveProductBtn">Add Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
