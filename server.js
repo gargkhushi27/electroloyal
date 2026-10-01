@@ -9,7 +9,7 @@ const path = require('path');
 const url = require('url');
 const db = require('./db.js');
 
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT, 10) || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Active SSE client connections for real-time synchronization
@@ -145,9 +145,10 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/events' && method === 'GET') {
         res.writeHead(200, {
           'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
+          'Cache-Control': 'no-cache, no-transform',
           'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': '*'
+          'Access-Control-Allow-Origin': '*',
+          'X-Accel-Buffering': 'no'
         });
         res.write(`data: ${JSON.stringify({ type: 'CONNECTED', version: dataVersion })}\n\n`);
         sseClients.add(res);

@@ -8,11 +8,28 @@ const path = require('path');
 const { DatabaseSync } = require('node:sqlite');
 
 const DATA_DIR = path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+const DB_PATH = process.env.DB_PATH || path.join(DATA_DIR, 'electroloyal.db');
+const dbDir = path.dirname(DB_PATH);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const DB_PATH = process.env.DB_PATH || path.join(DATA_DIR, 'electroloyal.db');
+// Preserve existing data: If running with an empty persistent volume (e.g. Railway volume),
+// automatically seed from template if target DB does not exist yet.
+const SEED_PATH = path.join(__dirname, 'seed_data', 'electroloyal.db');
+const REPO_DB_PATH = path.join(DATA_DIR, 'electroloyal.db');
+if (!fs.existsSync(DB_PATH)) {
+  const sourceToCopy = fs.existsSync(SEED_PATH) ? SEED_PATH : (fs.existsSync(REPO_DB_PATH) && path.resolve(REPO_DB_PATH) !== path.resolve(DB_PATH) ? REPO_DB_PATH : null);
+  if (sourceToCopy) {
+    try {
+      fs.copyFileSync(sourceToCopy, DB_PATH);
+      console.log(`Database seeded from template to ${DB_PATH}`);
+    } catch (err) {
+      console.warn(`Warning: Could not seed database from ${sourceToCopy}:`, err.message);
+    }
+  }
+}
+
 const db = new DatabaseSync(DB_PATH);
 
 // Enable WAL mode for high concurrent multi-client read/write performance

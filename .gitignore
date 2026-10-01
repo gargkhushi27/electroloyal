@@ -1,2 +1,5 @@
 .DS_Store
 */.DS_Store
+data/*.db-shm
+data/*.db-wal
+seed_data

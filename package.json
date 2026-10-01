@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node scratch/run_all_tests.js"
+    "test": "node test_central_storage.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
   },
   "keywords": [
     "loyalty",
