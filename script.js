@@ -120,6 +120,111 @@ function saveTransactions() { localStorage.setItem("electroloyal_transactions", 
 function saveCart() { localStorage.setItem("electroloyal_cart", JSON.stringify(cart)); }
 function saveDataAll() { saveCustomers(); saveProducts(); saveTransactions(); saveCart(); }
 
+function renderActiveView() {
+  var activePage = document.querySelector(".page-view.active");
+  var pageId = activePage ? activePage.id.replace("view-", "") : "dashboard";
+  if (pageId === "dashboard") renderDashboard();
+  else if (pageId === "customers") renderCustomersTable();
+  else if (pageId === "products") renderProductsGrid();
+  else if (pageId === "product-detail" && currentSelectedProductId) viewProductDetail(currentSelectedProductId);
+  else if (pageId === "customer-profile" && currentSelectedCustomerId) viewCustomerProfile(currentSelectedCustomerId);
+  else if (pageId === "rewards") renderRewardsPage();
+  else if (pageId === "transactions") renderTransactionsTable();
+  else renderDashboard();
+}
+
+function syncFromServer(callback) {
+  if (typeof fetch !== "function") {
+    if (typeof callback === "function") callback(false);
+    return;
+  }
+  fetch('/api/data')
+    .then(function(res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    })
+    .then(function(data) {
+      if (data && data.success) {
+        if (Array.isArray(data.customers)) {
+          customers = data.customers;
+          saveCustomers();
+        }
+        if (Array.isArray(data.products)) {
+          products = data.products;
+          saveProducts();
+        }
+        if (Array.isArray(data.transactions)) {
+          transactions = data.transactions;
+          saveTransactions();
+        }
+        if (Array.isArray(cart) && cart.length > 0) {
+          cart.forEach(function(item) {
+            var p = products.find(function(prod) { return String(prod.id) === String(item.productId || item.id); });
+            if (p) {
+              item.name = p.name;
+              item.productName = p.name;
+              item.price = p.price;
+              item.image = p.image;
+            }
+          });
+          saveCart();
+          updateCartBadge();
+        }
+        renderActiveView();
+        if (typeof callback === "function") callback(true);
+      }
+    })
+    .catch(function(err) {
+      if (typeof callback === "function") callback(false, err);
+    });
+}
+
+var sseConnection = null;
+function initRealTimeSync() {
+  if (typeof EventSource === "undefined") return;
+  if (sseConnection) return;
+
+  try {
+    sseConnection = new EventSource('/api/events');
+    sseConnection.onmessage = function(event) {
+      try {
+        var evt = JSON.parse(event.data);
+        if (evt.type === 'CONNECTED') return;
+        syncFromServer();
+      } catch (e) {
+        syncFromServer();
+      }
+    };
+    sseConnection.addEventListener('PURCHASE_COMPLETED', function() { syncFromServer(); });
+    sseConnection.addEventListener('CUSTOMER_CREATED', function() { syncFromServer(); });
+    sseConnection.addEventListener('CUSTOMER_UPDATED', function() { syncFromServer(); });
+    sseConnection.addEventListener('CUSTOMER_DELETED', function() { syncFromServer(); });
+    sseConnection.addEventListener('PRODUCT_CREATED', function() { syncFromServer(); });
+    sseConnection.addEventListener('PRODUCT_UPDATED', function() { syncFromServer(); });
+    sseConnection.addEventListener('PRODUCT_DELETED', function() { syncFromServer(); });
+    sseConnection.addEventListener('REWARD_REDEEMED', function() { syncFromServer(); });
+    sseConnection.addEventListener('DATA_RESET', function() { syncFromServer(); });
+
+    sseConnection.onerror = function() {
+      // EventSource automatically retries
+    };
+  } catch (err) {
+    console.warn("Real-time SSE setup error:", err);
+  }
+
+  // Periodic polling fallback every 8 seconds
+  setInterval(function() {
+    if (document.visibilityState === "visible") {
+      syncFromServer();
+    }
+  }, 8000);
+
+  // Focus re-sync
+  window.addEventListener('focus', function() {
+    syncFromServer();
+  });
+}
+
 // --------------------------------------------------------------------------
 // 3. CORE BUSINESS CALCULATIONS & RULES
 // --------------------------------------------------------------------------
@@ -660,42 +765,110 @@ function handleSaveCustomer(event) {
   if (!name || !phone) { alert("Please fill in Name and Phone Number."); return; }
 
   if (editId) {
-    var custIndex = customers.findIndex(function(c) { return c.id === editId; });
-    if (custIndex !== -1) {
-      customers[custIndex].name = name;
-      customers[custIndex].phone = phone;
-      transactions.forEach(function(t) { if (t.customerId === editId) t.customerName = name; });
+    fetch('/api/customers/' + encodeURIComponent(editId), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, phone: phone })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (!data.success) {
+        alert(data.error || "Failed to update customer.");
+        return;
+      }
+      var custIndex = customers.findIndex(function(c) { return c.id === editId; });
+      if (custIndex !== -1) {
+        customers[custIndex] = data.customer;
+        transactions.forEach(function(t) { if (t.customerId === editId) t.customerName = name; });
+      }
+      saveDataAll();
+      closeModal("customerModal");
       alert("Customer details updated successfully!");
-    }
+      renderCustomersTable();
+      renderDashboard();
+    })
+    .catch(function() {
+      var custIndex = customers.findIndex(function(c) { return c.id === editId; });
+      if (custIndex !== -1) {
+        customers[custIndex].name = name;
+        customers[custIndex].phone = phone;
+        transactions.forEach(function(t) { if (t.customerId === editId) t.customerName = name; });
+      }
+      saveDataAll();
+      closeModal("customerModal");
+      alert("Customer details updated successfully!");
+      renderCustomersTable();
+      renderDashboard();
+    });
   } else {
-    var existing = customers.find(function(c) { return c.phone === phone; });
-    if (existing) { alert("A customer with phone number " + phone + " already exists: " + existing.name + " (" + existing.id + ")"); return; }
-    var newId = generateNextCustomerId();
-    var newCust = { id: newId, name: name, email: "", phone: phone, dob: "", membership: "Bronze", totalSpending: 0, points: 0, purchasesCount: 0, createdAt: new Date().toISOString().split('T')[0] };
-    customers.push(newCust);
-    alert("New Customer created! ID: " + newId);
+    fetch('/api/customers', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, phone: phone })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (!data.success) {
+        alert(data.error || "Failed to create customer.");
+        return;
+      }
+      if (data.isExisting) {
+        alert("A customer with phone number " + phone + " already exists: " + data.customer.name + " (" + data.customer.id + ")");
+        return;
+      }
+      var newCust = data.customer;
+      var existingIndex = customers.findIndex(function(c) { return c.id === newCust.id; });
+      if (existingIndex !== -1) {
+        customers[existingIndex] = newCust;
+      } else {
+        customers.push(newCust);
+      }
+      saveDataAll();
+      closeModal("customerModal");
+      alert("New Customer created! ID: " + newCust.id);
 
-    // Auto-select in purchase modal if open
-    var purchModal = document.getElementById("purchaseModal");
-    if (purchModal && purchModal.classList.contains("active") && typeof selectCustomerForPurchase === "function") {
-      selectCustomerForPurchase(newId);
-    }
-    // Auto-select in cart checkout modal if open
-    var checkoutModal = document.getElementById("cartCheckoutModal");
-    if (checkoutModal && checkoutModal.classList.contains("active") && typeof selectCustomerForCheckout === "function") {
-      selectCustomerForCheckout(newId);
-    }
+      // Auto-select in purchase modal if open
+      var purchModal = document.getElementById("purchaseModal");
+      if (purchModal && purchModal.classList.contains("active") && typeof selectCustomerForPurchase === "function") {
+        selectCustomerForPurchase(newCust.id);
+      }
+      // Auto-select in cart checkout modal if open
+      var checkoutModal = document.getElementById("cartCheckoutModal");
+      if (checkoutModal && checkoutModal.classList.contains("active") && typeof selectCustomerForCheckout === "function") {
+        selectCustomerForCheckout(newCust.id);
+      }
+      renderCustomersTable();
+      renderDashboard();
+    })
+    .catch(function() {
+      var existing = customers.find(function(c) { return c.phone === phone; });
+      if (existing) { alert("A customer with phone number " + phone + " already exists: " + existing.name + " (" + existing.id + ")"); return; }
+      var newId = generateNextCustomerId();
+      var newCust = { id: newId, name: name, email: "", phone: phone, dob: "", membership: "Bronze", totalSpending: 0, points: 0, purchasesCount: 0, createdAt: new Date().toISOString().split('T')[0] };
+      customers.push(newCust);
+      saveDataAll();
+      closeModal("customerModal");
+      alert("New Customer created! ID: " + newId);
+
+      var purchModal = document.getElementById("purchaseModal");
+      if (purchModal && purchModal.classList.contains("active") && typeof selectCustomerForPurchase === "function") {
+        selectCustomerForPurchase(newId);
+      }
+      var checkoutModal = document.getElementById("cartCheckoutModal");
+      if (checkoutModal && checkoutModal.classList.contains("active") && typeof selectCustomerForCheckout === "function") {
+        selectCustomerForCheckout(newId);
+      }
+      renderCustomersTable();
+      renderDashboard();
+    });
   }
-  saveDataAll();
-  closeModal("customerModal");
-  renderCustomersTable();
-  renderDashboard();
 }
 
 function deleteCustomer(customerId) {
   var cust = customers.find(function(c) { return c.id === customerId; });
   if (!cust) return;
   if (!confirm('Delete customer "' + cust.name + '" (' + cust.id + ')? This will remove the profile.')) return;
+  fetch('/api/customers/' + encodeURIComponent(customerId), { method: 'DELETE' }).catch(function(){});
   customers = customers.filter(function(c) { return c.id !== customerId; });
   saveDataAll();
   renderCustomersTable();
@@ -954,46 +1127,93 @@ function handleCompletePurchase(event) {
   if (!product) { alert("Invalid product selected."); return; }
   if (qty > product.stock) { alert("Insufficient stock! Only " + product.stock + " units available."); return; }
 
-  var totalAmount = product.price * qty;
-  var earnedPoints = calculatePoints(totalAmount);
-  product.stock -= qty;
-  customer.totalSpending = (customer.totalSpending || 0) + totalAmount;
-  customer.points = (customer.points || 0) + earnedPoints;
-  customer.purchasesCount = (customer.purchasesCount || 0) + 1;
-  var oldTier = customer.membership;
-  var newTier = calculateMembership(customer.totalSpending);
-  customer.membership = newTier;
-  customer.rewards = getUnlockedRewards(customer);
-  var rewardNote = oldTier !== newTier ? "Upgraded to " + newTier + " Tier!" : "Purchase Completed";
-
-  var newTxnId = generateNextTransactionId();
-  transactions.push({
-    transactionId: newTxnId,
-    customerId: customer.id,
-    customerName: customer.name,
-    productId: product.id,
-    productName: product.name,
-    quantity: qty,
-    amount: totalAmount,
+  var payload = {
+    customerId: customerId,
+    items: [{ productId: productId, quantity: qty }],
     paymentMethod: paymentMethod,
-    points: earnedPoints,
-    date: date,
-    rewardActivity: rewardNote
+    date: date
+  };
+
+  fetch('/api/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(result) {
+    if (!result.success) {
+      alert(result.error || "Purchase failed.");
+      return;
+    }
+
+    if (result.updatedProducts) {
+      products = result.updatedProducts;
+    } else {
+      product.stock -= qty;
+    }
+
+    var custIdx = customers.findIndex(function(c) { return c.id === result.customer.id; });
+    if (custIdx !== -1) customers[custIdx] = result.customer;
+    else customers.push(result.customer);
+
+    transactions.unshift(result.transaction);
+    saveDataAll();
+
+    closeModal("purchaseModal");
+    alert("Purchase successful!\nTxn: " + result.transaction.transactionId + "\nTotal: \u20b9" + result.totalAmount.toLocaleString() + "\nPoints: +" + result.earnedPoints + "\nTier: " + result.customer.membership);
+
+    currentSelectedCustomerId = result.customer.id;
+    renderProductsGrid();
+    renderCustomersTable();
+    renderTransactionsTable();
+    renderDashboard();
+    renderRewardsPage();
+    if (currentSelectedCustomerId === customerId) {
+      viewCustomerProfile(customerId);
+    }
+  })
+  .catch(function() {
+    var totalAmount = product.price * qty;
+    var earnedPoints = calculatePoints(totalAmount);
+    product.stock -= qty;
+    customer.totalSpending = (customer.totalSpending || 0) + totalAmount;
+    customer.points = (customer.points || 0) + earnedPoints;
+    customer.purchasesCount = (customer.purchasesCount || 0) + 1;
+    var oldTier = customer.membership;
+    var newTier = calculateMembership(customer.totalSpending);
+    customer.membership = newTier;
+    customer.rewards = getUnlockedRewards(customer);
+    var rewardNote = oldTier !== newTier ? "Upgraded to " + newTier + " Tier!" : "Purchase Completed";
+
+    var newTxnId = generateNextTransactionId();
+    transactions.unshift({
+      transactionId: newTxnId,
+      customerId: customer.id,
+      customerName: customer.name,
+      productId: product.id,
+      productName: product.name,
+      quantity: qty,
+      amount: totalAmount,
+      paymentMethod: paymentMethod,
+      points: earnedPoints,
+      date: date,
+      rewardActivity: rewardNote
+    });
+
+    saveDataAll();
+    closeModal("purchaseModal");
+    alert("Purchase successful!\nTxn: " + newTxnId + "\nTotal: \u20b9" + totalAmount.toLocaleString() + "\nPoints: +" + earnedPoints + "\nTier: " + customer.membership);
+
+    currentSelectedCustomerId = customer.id;
+    renderProductsGrid();
+    renderCustomersTable();
+    renderTransactionsTable();
+    renderDashboard();
+    renderRewardsPage();
+    if (currentSelectedCustomerId === customerId) {
+      viewCustomerProfile(customerId);
+    }
   });
-
-  saveDataAll();
-  closeModal("purchaseModal");
-  alert("Purchase successful!\nTxn: " + newTxnId + "\nTotal: \u20b9" + totalAmount.toLocaleString() + "\nPoints: +" + earnedPoints + "\nTier: " + customer.membership);
-
-  currentSelectedCustomerId = customer.id;
-  renderProductsGrid();
-  renderCustomersTable();
-  renderTransactionsTable();
-  renderDashboard();
-  renderRewardsPage();
-  if (currentSelectedCustomerId === customerId) {
-    viewCustomerProfile(customerId);
-  }
 }
 
 // --------------------------------------------------------------------------
@@ -1177,13 +1397,36 @@ function redeemReward(rewardName, customerId) {
     alert("Reward has already been redeemed.");
     return;
   }
-  cust.redeemedRewards.push(rewardName);
-  saveCustomers();
-  renderRewardsPage();
-  if (currentSelectedCustomerId === cust.id) {
-    viewCustomerProfile(cust.id);
-  }
-  alert("Reward \"" + rewardName + "\" redeemed successfully for " + cust.name + "!");
+
+  fetch('/api/rewards/redeem', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ customerId: customerId, rewardName: rewardName })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(result) {
+    if (!result.success) {
+      alert(result.error || "Reward redemption failed.");
+      return;
+    }
+    var idx = customers.findIndex(function(c) { return c.id === customerId; });
+    if (idx !== -1) customers[idx] = result.customer;
+    saveCustomers();
+    renderRewardsPage();
+    if (currentSelectedCustomerId === cust.id) {
+      viewCustomerProfile(cust.id);
+    }
+    alert("Reward \"" + rewardName + "\" redeemed successfully for " + result.customer.name + "!");
+  })
+  .catch(function() {
+    cust.redeemedRewards.push(rewardName);
+    saveCustomers();
+    renderRewardsPage();
+    if (currentSelectedCustomerId === cust.id) {
+      viewCustomerProfile(cust.id);
+    }
+    alert("Reward \"" + rewardName + "\" redeemed successfully for " + cust.name + "!");
+  });
 }
 
 // --------------------------------------------------------------------------
@@ -1324,6 +1567,24 @@ function handleSaveProduct(event) {
     var prodIndex = products.findIndex(function(p) { return p.id === editId; });
     if (prodIndex === -1) { alert("Product not found."); return; }
 
+    var updatePayload = {
+      name: name,
+      category: category,
+      price: price,
+      stock: stock,
+      description: description,
+      specifications: specifications,
+      eligibleMembership: eligibility,
+      membershipOffer: membershipOffer
+    };
+    if (newImageData) updatePayload.image = newImageData;
+
+    fetch('/api/products/' + editId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatePayload)
+    }).catch(function(){});
+
     products[prodIndex].name = name;
     products[prodIndex].category = category;
     products[prodIndex].price = price;
@@ -1374,6 +1635,12 @@ function handleSaveProduct(event) {
       membershipOffer: membershipOffer
     };
 
+    fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newProduct)
+    }).catch(function(){});
+
     products.push(newProduct);
     saveDataAll();
     closeModal("productModal");
@@ -1389,6 +1656,8 @@ function deleteProduct(productNumericId) {
 
   var confirmDelete = confirm('Are you sure you want to delete "' + prod.name + '" (' + (prod.productId || 'ID:' + prod.id) + ')?\n\nExisting purchase history and transactions referencing this product will NOT be deleted.');
   if (!confirmDelete) return;
+
+  fetch('/api/products/' + productNumericId, { method: 'DELETE' }).catch(function(){});
 
   products = products.filter(function(p) { return p.id !== productNumericId; });
   saveDataAll();
@@ -1774,84 +2043,125 @@ function handleCartCheckoutPurchase() {
   var paymentMethod = document.getElementById("checkoutPayment").value || "Online";
   var date = document.getElementById("checkoutDate").value || new Date().toISOString().split('T')[0];
 
-  // 2. Calculate total amount
-  var totalCartAmount = 0;
-  for (var j = 0; j < cart.length; j++) {
-    var item = cart[j];
-    var p = products.find(function(prod) { return String(prod.id) === String(item.productId || item.id); }) || item;
-    totalCartAmount += (p.price * item.quantity);
-  }
+  var payload = {
+    customerId: custId,
+    items: cart.map(function(item) {
+      return {
+        productId: item.productId || item.id,
+        quantity: item.quantity
+      };
+    }),
+    paymentMethod: paymentMethod,
+    date: date
+  };
 
-  // 3. Calculate points from final eligible purchase amount (₹500 = 10 pts)
-  var totalCartPoints = calculatePoints(totalCartAmount);
+  fetch('/api/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(result) {
+    if (!result.success) {
+      alert(result.error || "Order failed.");
+      return;
+    }
 
-  // 4. Update product stock
-  cart.forEach(function(cItem) {
-    var prod = products.find(function(p) { return String(p.id) === String(cItem.productId || cItem.id); });
-    if (prod) {
-      prod.stock -= cItem.quantity;
+    if (result.updatedProducts) {
+      products = result.updatedProducts;
+    }
+    var custIdx = customers.findIndex(function(c) { return c.id === result.customer.id; });
+    if (custIdx !== -1) customers[custIdx] = result.customer;
+    else customers.push(result.customer);
+
+    transactions.unshift(result.transaction);
+    cart = [];
+    saveDataAll();
+    updateCartBadge();
+    closeModal("cartCheckoutModal");
+
+    alert("Order completed successfully!\nCustomer: " + result.customer.name + "\nTotal: \u20b9" + result.totalAmount.toLocaleString() + "\nPoints Earned: +" + result.earnedPoints + " pts\nTier: " + result.customer.membership);
+
+    currentSelectedCustomerId = result.customer.id;
+    renderProductsGrid();
+    renderCustomersTable();
+    renderTransactionsTable();
+    renderDashboard();
+    renderRewardsPage();
+
+    if (currentSelectedCustomerId === custId) {
+      viewCustomerProfile(custId);
+    }
+  })
+  .catch(function() {
+    // Local fallback
+    var totalCartAmount = 0;
+    for (var j = 0; j < cart.length; j++) {
+      var item = cart[j];
+      var p = products.find(function(prod) { return String(prod.id) === String(item.productId || item.id); }) || item;
+      totalCartAmount += (p.price * item.quantity);
+    }
+
+    var totalCartPoints = calculatePoints(totalCartAmount);
+
+    cart.forEach(function(cItem) {
+      var prod = products.find(function(p) { return String(p.id) === String(cItem.productId || cItem.id); });
+      if (prod) {
+        prod.stock -= cItem.quantity;
+      }
+    });
+
+    customer.totalSpending = (customer.totalSpending || 0) + totalCartAmount;
+    customer.points = (customer.points || 0) + totalCartPoints;
+    customer.purchasesCount = (customer.purchasesCount || 0) + 1;
+
+    var oldTier = customer.membership;
+    var newTier = calculateMembership(customer.totalSpending);
+    customer.membership = newTier;
+    customer.rewards = getUnlockedRewards(customer);
+
+    var rewardNote = oldTier !== newTier ? "Upgraded to " + newTier + " Tier!" : "Purchase Completed";
+
+    var txnId = generateNextTransactionId();
+    var productSummary = cart.map(function(cItem) {
+      var prod = products.find(function(p) { return String(p.id) === String(cItem.productId || cItem.id); }) || cItem;
+      return prod.name + (cItem.quantity > 1 ? " (\u00d7" + cItem.quantity + ")" : "");
+    }).join(", ");
+    var totalCartQty = cart.reduce(function(sum, cItem) { return sum + cItem.quantity; }, 0);
+
+    var newTxn = {
+      transactionId: txnId,
+      customerId: customer.id,
+      customerName: customer.name,
+      productId: cart[0].productId,
+      productName: productSummary,
+      quantity: totalCartQty,
+      amount: totalCartAmount,
+      paymentMethod: paymentMethod,
+      points: totalCartPoints,
+      date: date,
+      rewardActivity: rewardNote
+    };
+    transactions.unshift(newTxn);
+
+    cart = [];
+    saveDataAll();
+    updateCartBadge();
+    closeModal("cartCheckoutModal");
+
+    alert("Order completed successfully!\nCustomer: " + customer.name + "\nTotal: \u20b9" + totalCartAmount.toLocaleString() + "\nPoints Earned: +" + totalCartPoints + " pts\nTier: " + newTier);
+
+    currentSelectedCustomerId = customer.id;
+    renderProductsGrid();
+    renderCustomersTable();
+    renderTransactionsTable();
+    renderDashboard();
+    renderRewardsPage();
+
+    if (currentSelectedCustomerId === customer.id) {
+      viewCustomerProfile(customer.id);
     }
   });
-
-  // 5. Update customer spending, points, and purchases count
-  customer.totalSpending = (customer.totalSpending || 0) + totalCartAmount;
-  customer.points = (customer.points || 0) + totalCartPoints;
-  customer.purchasesCount = (customer.purchasesCount || 0) + 1;
-
-  // 6. Recalculate membership tier
-  var oldTier = customer.membership;
-  var newTier = calculateMembership(customer.totalSpending);
-  customer.membership = newTier;
-
-  // 7. Update rewards eligibility
-  customer.rewards = getUnlockedRewards(customer);
-
-  var rewardNote = oldTier !== newTier ? "Upgraded to " + newTier + " Tier!" : "Purchase Completed";
-
-  // 8. Create exactly ONE transaction record
-  var txnId = generateNextTransactionId();
-  var productSummary = cart.map(function(cItem) {
-    var prod = products.find(function(p) { return String(p.id) === String(cItem.productId || cItem.id); }) || cItem;
-    return prod.name + (cItem.quantity > 1 ? " (\u00d7" + cItem.quantity + ")" : "");
-  }).join(", ");
-  var totalCartQty = cart.reduce(function(sum, cItem) { return sum + cItem.quantity; }, 0);
-
-  var newTxn = {
-    transactionId: txnId,
-    customerId: customer.id,
-    customerName: customer.name,
-    productId: cart[0].productId,
-    productName: productSummary,
-    quantity: totalCartQty,
-    amount: totalCartAmount,
-    paymentMethod: paymentMethod,
-    points: totalCartPoints,
-    date: date,
-    rewardActivity: rewardNote
-  };
-  transactions.push(newTxn);
-
-  // 9. Clear cart
-  cart = [];
-
-  // 10. Persist all updated data
-  saveDataAll();
-  updateCartBadge();
-  closeModal("cartCheckoutModal");
-
-  alert("Order completed successfully!\nCustomer: " + customer.name + "\nTotal: \u20b9" + totalCartAmount.toLocaleString() + "\nPoints Earned: +" + totalCartPoints + " pts\nTier: " + newTier);
-
-  // 11. Refresh views
-  currentSelectedCustomerId = customer.id;
-  renderProductsGrid();
-  renderCustomersTable();
-  renderTransactionsTable();
-  renderDashboard();
-  renderRewardsPage();
-
-  if (currentSelectedCustomerId === customer.id) {
-    viewCustomerProfile(customer.id);
-  }
 }
 
 // --------------------------------------------------------------------------
@@ -1905,16 +2215,31 @@ function clearDemoData() {
   var confirmReset = confirm("Are you sure you want to reset all data to default demo state? Custom added data will be erased.");
   if (!confirmReset) return;
 
-  localStorage.removeItem("electroloyal_customers");
-  localStorage.removeItem("electroloyal_products");
-  localStorage.removeItem("electroloyal_transactions");
-  localStorage.removeItem("electroloyal_cart");
-
-  loadData();
-  updateCartBadge();
-  alert("Data reset to initial demo state!");
-  closeModal("backupModal");
-  renderDashboard();
+  fetch('/api/reset', { method: 'POST' })
+    .then(function() {
+      localStorage.removeItem("electroloyal_customers");
+      localStorage.removeItem("electroloyal_products");
+      localStorage.removeItem("electroloyal_transactions");
+      localStorage.removeItem("electroloyal_cart");
+      cart = [];
+      syncFromServer(function() {
+        updateCartBadge();
+        alert("Data reset to initial demo state!");
+        closeModal("backupModal");
+        renderDashboard();
+      });
+    })
+    .catch(function() {
+      localStorage.removeItem("electroloyal_customers");
+      localStorage.removeItem("electroloyal_products");
+      localStorage.removeItem("electroloyal_transactions");
+      localStorage.removeItem("electroloyal_cart");
+      loadData();
+      updateCartBadge();
+      alert("Data reset to initial demo state!");
+      closeModal("backupModal");
+      renderDashboard();
+    });
 }
 
 // --------------------------------------------------------------------------
@@ -1984,6 +2309,8 @@ document.addEventListener("DOMContentLoaded", function() {
   loadData();
   updateCartBadge();
   initCategoryChips();
+  initRealTimeSync();
+  syncFromServer();
 
   var navItems = document.querySelectorAll(".nav-item");
   navItems.forEach(function(item) {

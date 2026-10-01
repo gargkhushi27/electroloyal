@@ -1,0 +1,17 @@
+{
+  "name": "electroloyal",
+  "version": "1.0.0",
+  "description": "Electronics Retail Customer Loyalty Management System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node scratch/run_all_tests.js"
+  },
+  "keywords": [
+    "loyalty",
+    "retail",
+    "electronics"
+  ],
+  "author": "",
+  "license": "ISC"
+}
