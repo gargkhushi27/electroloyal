@@ -7,6 +7,11 @@
 // 1. GLOBAL STATE & CONSTANTS
 // --------------------------------------------------------------------------
 
+// Dynamic Relative API URL Base (always points to the host serving the app)
+const API_BASE = (typeof window !== "undefined" && window.location && window.location.origin && window.location.origin !== "null")
+  ? window.location.origin
+  : "";
+
 // Default Product List (35 Fictional Electronics Products)
 const DEFAULT_PRODUCTS = [
   { id: 1, name: "Nova X1", category: "Smartphones", price: 24999, image: "images/products/nova-x1.svg", stock: 25, description: "Sleek budget smartphone with 6.5-inch AMOLED screen and dual camera.", specifications: ["6.5 inch AMOLED Display", "128 GB Storage", "8 GB RAM", "4500 mAh Battery"], eligibleMembership: "Bronze", membershipOffer: "5% OFF for Silver members" },
@@ -131,6 +136,10 @@ function renderActiveView() {
   else if (pageId === "rewards") renderRewardsPage();
   else if (pageId === "transactions") renderTransactionsTable();
   else renderDashboard();
+
+  // Keep dashboard KPI counts updated in memory/background
+  var elCust = document.getElementById("dashTotalCustomers");
+  if (elCust) elCust.textContent = customers.length;
 }
 
 function syncFromServer(callback) {
@@ -138,7 +147,7 @@ function syncFromServer(callback) {
     if (typeof callback === "function") callback(false);
     return;
   }
-  fetch('/api/data')
+  fetch(API_BASE + '/api/data', { cache: 'no-cache' })
     .then(function(res) {
       if (!res.ok) throw new Error("HTTP " + res.status);
       return res.json();
@@ -185,7 +194,7 @@ function initRealTimeSync() {
   if (sseConnection) return;
 
   try {
-    sseConnection = new EventSource('/api/events');
+    sseConnection = new EventSource(API_BASE + '/api/events');
     sseConnection.onmessage = function(event) {
       try {
         var evt = JSON.parse(event.data);
@@ -206,22 +215,27 @@ function initRealTimeSync() {
     sseConnection.addEventListener('DATA_RESET', function() { syncFromServer(); });
 
     sseConnection.onerror = function() {
-      // EventSource automatically retries
+      try { sseConnection.close(); } catch(e) {}
+      sseConnection = null;
+      setTimeout(initRealTimeSync, 3000);
     };
   } catch (err) {
     console.warn("Real-time SSE setup error:", err);
   }
 
-  // Periodic polling fallback every 8 seconds
+  // Periodic polling fallback every 3 seconds for continuous multi-device sync
   setInterval(function() {
     if (document.visibilityState === "visible") {
       syncFromServer();
     }
-  }, 8000);
+  }, 3000);
 
-  // Focus re-sync
-  window.addEventListener('focus', function() {
-    syncFromServer();
+  // Focus, visibility, and network reconnect triggers
+  window.addEventListener('focus', function() { syncFromServer(); });
+  window.addEventListener('pageshow', function() { syncFromServer(); });
+  window.addEventListener('online', function() { syncFromServer(); });
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) syncFromServer();
   });
 }
 
@@ -301,6 +315,8 @@ function navigateTo(pageId) {
     openCartPanel();
     return;
   }
+  // Refresh data from central database on tab change
+  syncFromServer();
   var pages = document.querySelectorAll(".page-view");
   pages.forEach(function(p) { p.classList.remove("active"); });
   var navItems = document.querySelectorAll(".nav-item");
@@ -713,8 +729,13 @@ function renderAnalyticsView() {
 // --------------------------------------------------------------------------
 
 function renderCustomersTable(filterQuery) {
+  if (filterQuery === undefined) {
+    var searchEl = document.getElementById("customerSearchInput");
+    filterQuery = searchEl ? searchEl.value : "";
+  }
   filterQuery = filterQuery || "";
   var tbody = document.getElementById("customersTableBody");
+  if (!tbody) return;
   tbody.innerHTML = "";
   var query = filterQuery.toLowerCase().trim();
   var filtered = customers.filter(function(c) {
@@ -730,9 +751,9 @@ function renderCustomersTable(filterQuery) {
     row.innerHTML = '<td><strong>' + escapeHtml(cust.name) + '</strong></td>' +
       '<td><code>' + cust.id + '</code></td>' +
       '<td>' + escapeHtml(cust.phone || "") + '</td>' +
-      '<td><span class="tier-badge ' + cust.membership.toLowerCase() + '">' + cust.membership + '</span></td>' +
-      '<td><strong>\u20b9' + cust.totalSpending.toLocaleString() + '</strong></td>' +
-      '<td><span style="color:#D97706; font-weight:700;">' + cust.points + ' pts</span></td>' +
+      '<td><span class="tier-badge ' + (cust.membership || 'bronze').toLowerCase() + '">' + (cust.membership || 'Bronze') + '</span></td>' +
+      '<td><strong>\u20b9' + (cust.totalSpending || 0).toLocaleString() + '</strong></td>' +
+      '<td><span style="color:#D97706; font-weight:700;">' + (cust.points || 0) + ' pts</span></td>' +
       '<td><span class="reward-status-badge available">' + unlocked.length + ' Rewards</span></td>' +
       '<td><div style="display:flex; gap:6px;"><button class="btn btn-secondary btn-sm" onclick="viewCustomerProfile(\'' + cust.id + '\')" title="View Profile"><i class="fa-solid fa-eye"></i> View</button><button class="btn btn-secondary btn-sm" onclick="openEditCustomerModal(\'' + cust.id + '\')" title="Edit"><i class="fa-solid fa-pen"></i> Edit</button><button class="btn btn-danger btn-sm" onclick="deleteCustomer(\'' + cust.id + '\')" title="Delete"><i class="fa-solid fa-trash"></i></button></div></td>';
     tbody.appendChild(row);
@@ -988,34 +1009,52 @@ function searchCustomersForPurchase(query) {
   if (!resultsDiv) return;
 
   var q = (query || "").toLowerCase().trim();
-  resultsDiv.innerHTML = "";
+
+  function renderPurchItems(list) {
+    resultsDiv.innerHTML = "";
+    if (list.length > 0) {
+      list.slice(0, 5).forEach(function(cust) {
+        var item = document.createElement("div");
+        item.className = "cust-result-item";
+        item.innerHTML = '<strong>' + escapeHtml(cust.name) + ' <span class="tier-badge ' + (cust.membership || 'bronze').toLowerCase() + '" style="font-size:10px;padding:1px 6px;">' + (cust.membership || 'Bronze') + '</span></strong>' +
+          '<small>' + cust.id + ' \u2022 ' + (cust.phone || 'No phone') + '</small>';
+        item.onclick = function() { selectCustomerForPurchase(cust.id); };
+        resultsDiv.appendChild(item);
+      });
+    }
+    var addNewItem = document.createElement("div");
+    addNewItem.className = "cust-result-add-new";
+    addNewItem.innerHTML = '<i class="fa-solid fa-user-plus"></i> + Add New Customer';
+    addNewItem.onclick = function() {
+      resultsDiv.classList.remove("active");
+      openAddCustomerModal();
+    };
+    resultsDiv.appendChild(addNewItem);
+    resultsDiv.classList.add("active");
+  }
 
   var matched = customers.filter(function(c) {
     return c.name.toLowerCase().includes(q) ||
       c.id.toLowerCase().includes(q) ||
       (c.phone && c.phone.includes(q));
   });
+  renderPurchItems(matched);
 
-  if (matched.length > 0) {
-    matched.slice(0, 5).forEach(function(cust) {
-      var item = document.createElement("div");
-      item.className = "cust-result-item";
-      item.innerHTML = '<strong>' + escapeHtml(cust.name) + ' <span class="tier-badge ' + cust.membership.toLowerCase() + '" style="font-size:10px;padding:1px 6px;">' + cust.membership + '</span></strong>' +
-        '<small>' + cust.id + ' \u2022 ' + (cust.phone || 'No phone') + '</small>';
-      item.onclick = function() { selectCustomerForPurchase(cust.id); };
-      resultsDiv.appendChild(item);
-    });
+  if (q.length > 0) {
+    fetch(API_BASE + '/api/customers?q=' + encodeURIComponent(q))
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        if (res && res.success && Array.isArray(res.customers)) {
+          res.customers.forEach(function(sc) {
+            if (!customers.some(function(c) { return c.id === sc.id; })) {
+              customers.push(sc);
+            }
+          });
+          renderPurchItems(res.customers);
+        }
+      })
+      .catch(function() {});
   }
-
-  var addNewItem = document.createElement("div");
-  addNewItem.className = "cust-result-add-new";
-  addNewItem.innerHTML = '<i class="fa-solid fa-user-plus"></i> + Add New Customer';
-  addNewItem.onclick = function() {
-    resultsDiv.classList.remove("active");
-    openAddCustomerModal();
-  };
-  resultsDiv.appendChild(addNewItem);
-  resultsDiv.classList.add("active");
 }
 
 function selectCustomerForPurchase(customerId) {
@@ -1893,42 +1932,60 @@ function searchCustomersForCheckout(query) {
   if (!resultsDiv) return;
 
   var q = (query || "").toLowerCase().trim();
-  resultsDiv.innerHTML = "";
+
+  function renderCheckoutList(list) {
+    resultsDiv.innerHTML = "";
+    if (list.length > 0) {
+      list.slice(0, 5).forEach(function(cust) {
+        var item = document.createElement("div");
+        item.className = "cust-result-item";
+        item.innerHTML = '<strong>' + escapeHtml(cust.name) + ' <span class="tier-badge ' + (cust.membership || 'bronze').toLowerCase() + '" style="font-size:10px;padding:1px 6px;">' + (cust.membership || 'Bronze') + '</span></strong>' +
+          '<small>' + cust.id + ' \u2022 ' + (cust.phone || 'No phone') + '</small>';
+        item.onclick = function() { selectCustomerForCheckout(cust.id); };
+        resultsDiv.appendChild(item);
+      });
+    }
+    var addNewItem = document.createElement("div");
+    addNewItem.className = "cust-result-add-new";
+    addNewItem.innerHTML = '<i class="fa-solid fa-user-plus"></i> + Add New Customer';
+    addNewItem.onclick = function() {
+      resultsDiv.classList.remove("active");
+      var form = document.getElementById("checkoutNewCustForm");
+      if (form) {
+        form.style.display = "block";
+        var nameInput = document.getElementById("checkoutNewCustName");
+        if (nameInput) {
+          nameInput.value = q;
+          nameInput.focus();
+        }
+      }
+    };
+    resultsDiv.appendChild(addNewItem);
+    resultsDiv.classList.add("active");
+  }
 
   var matched = customers.filter(function(c) {
     return c.name.toLowerCase().includes(q) ||
       c.id.toLowerCase().includes(q) ||
       (c.phone && c.phone.includes(q));
   });
+  renderCheckoutList(matched);
 
-  if (matched.length > 0) {
-    matched.slice(0, 5).forEach(function(cust) {
-      var item = document.createElement("div");
-      item.className = "cust-result-item";
-      item.innerHTML = '<strong>' + escapeHtml(cust.name) + ' <span class="tier-badge ' + cust.membership.toLowerCase() + '" style="font-size:10px;padding:1px 6px;">' + cust.membership + '</span></strong>' +
-        '<small>' + cust.id + ' \u2022 ' + (cust.phone || 'No phone') + '</small>';
-      item.onclick = function() { selectCustomerForCheckout(cust.id); };
-      resultsDiv.appendChild(item);
-    });
+  if (q.length > 0) {
+    fetch(API_BASE + '/api/customers?q=' + encodeURIComponent(q))
+      .then(function(r) { return r.json(); })
+      .then(function(res) {
+        if (res && res.success && Array.isArray(res.customers)) {
+          res.customers.forEach(function(sc) {
+            if (!customers.some(function(c) { return c.id === sc.id; })) {
+              customers.push(sc);
+            }
+          });
+          renderCheckoutList(res.customers);
+        }
+      })
+      .catch(function() {});
   }
-
-  var addNewItem = document.createElement("div");
-  addNewItem.className = "cust-result-add-new";
-  addNewItem.innerHTML = '<i class="fa-solid fa-user-plus"></i> + Add New Customer';
-  addNewItem.onclick = function() {
-    resultsDiv.classList.remove("active");
-    var form = document.getElementById("checkoutNewCustForm");
-    if (form) {
-      form.style.display = "block";
-      var nameInput = document.getElementById("checkoutNewCustName");
-      if (nameInput) {
-        nameInput.value = q;
-        nameInput.focus();
-      }
-    }
-  };
-  resultsDiv.appendChild(addNewItem);
-  resultsDiv.classList.add("active");
 }
 
 function selectCustomerForCheckout(customerId) {
@@ -1941,7 +1998,7 @@ function selectCustomerForCheckout(customerId) {
   var infoDiv = document.getElementById("checkoutSelectedCustInfo");
   if (infoDiv) {
     infoDiv.style.display = "flex";
-    infoDiv.innerHTML = '<span><i class="fa-solid fa-user-check"></i> ' + escapeHtml(cust.name) + ' (' + cust.id + ' \u2022 ' + (cust.phone || '') + ') <span class="tier-badge ' + cust.membership.toLowerCase() + '" style="font-size:10px;padding:2px 6px;margin-left:6px;">' + cust.membership + '</span></span>' +
+    infoDiv.innerHTML = '<span><i class="fa-solid fa-user-check"></i> ' + escapeHtml(cust.name) + ' (' + cust.id + ' \u2022 ' + (cust.phone || '') + ') <span class="tier-badge ' + (cust.membership || 'bronze').toLowerCase() + '" style="font-size:10px;padding:2px 6px;margin-left:6px;">' + (cust.membership || 'Bronze') + '</span></span>' +
       '<button type="button" class="clear-cust" onclick="clearCheckoutSelectedCustomer()">&times;</button>';
   }
 
@@ -1979,25 +2036,29 @@ function createCustomerFromCheckout() {
     return;
   }
 
-  var newId = generateNextCustomerId();
-  var newCust = {
-    id: newId,
-    name: name,
-    email: "",
-    phone: phone,
-    dob: "",
-    membership: "Bronze",
-    totalSpending: 0,
-    points: 0,
-    purchasesCount: 0,
-    createdAt: new Date().toISOString().split('T')[0]
-  };
-
-  customers.push(newCust);
-  saveCustomers();
-  renderCustomersTable();
-  selectCustomerForCheckout(newId);
-  showToast("Customer created: " + name, "fa-user-check");
+  fetch(API_BASE + '/api/customers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: name, phone: phone })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (!data.success) {
+      alert(data.error || "Failed to create customer.");
+      return;
+    }
+    var newCust = data.customer;
+    var idx = customers.findIndex(function(c) { return c.id === newCust.id; });
+    if (idx !== -1) customers[idx] = newCust;
+    else customers.push(newCust);
+    saveCustomers();
+    renderCustomersTable();
+    selectCustomerForCheckout(newCust.id);
+    showToast("Customer created: " + newCust.name, "fa-user-check");
+  })
+  .catch(function(err) {
+    alert("Error communicating with central server. Please check connection.");
+  });
 }
 
 function handleCartCheckoutPurchase() {
@@ -2341,7 +2402,27 @@ document.addEventListener("DOMContentLoaded", function() {
   if (purchQtyInput) purchQtyInput.addEventListener("input", updatePurchaseCalculations);
 
   var custSearch = document.getElementById("customerSearchInput");
-  if (custSearch) custSearch.addEventListener("input", function(e) { renderCustomersTable(e.target.value); });
+  if (custSearch) {
+    custSearch.addEventListener("input", function(e) {
+      var val = e.target.value;
+      renderCustomersTable(val);
+      if (val && val.trim().length > 0) {
+        fetch(API_BASE + '/api/customers?q=' + encodeURIComponent(val.trim()))
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data && data.success && Array.isArray(data.customers)) {
+              data.customers.forEach(function(sc) {
+                if (!customers.some(function(c) { return c.id === sc.id; })) {
+                  customers.push(sc);
+                }
+              });
+              renderCustomersTable(val);
+            }
+          })
+          .catch(function() {});
+      }
+    });
+  }
   var prodSearch = document.getElementById("productSearchInput");
   if (prodSearch) prodSearch.addEventListener("input", renderProductsGrid);
   var prodCat = document.getElementById("productCategoryFilter");

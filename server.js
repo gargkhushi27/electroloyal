@@ -18,7 +18,10 @@ let dataVersion = Date.now();
 
 function broadcastEvent(eventType, payload = {}) {
   dataVersion = Date.now();
-  const message = `event: ${eventType}\ndata: ${JSON.stringify({ ...payload, version: dataVersion, timestamp: Date.now() })}\n\n`;
+  const eventPayload = JSON.stringify({ type: eventType, ...payload, version: dataVersion, timestamp: Date.now() });
+  // Write both named event and generic message for universal browser EventSource compatibility
+  const message = `event: ${eventType}\ndata: ${eventPayload}\n\n` +
+                  `data: ${eventPayload}\n\n`;
   for (const res of sseClients) {
     try {
       res.write(message);
@@ -101,11 +104,14 @@ function serveStatic(req, res, parsedUrl) {
 
     const ext = path.extname(safePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    const isNoCache = (ext === '.html' || ext === '.js' || ext === '.css' || ext === '.json');
 
     res.writeHead(200, {
       'Content-Type': contentType,
       'Access-Control-Allow-Origin': '*',
-      'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=3600'
+      'Cache-Control': isNoCache ? 'no-cache, no-store, must-revalidate' : 'public, max-age=3600',
+      'Pragma': isNoCache ? 'no-cache' : 'public',
+      'Expires': isNoCache ? '0' : '3600'
     });
 
     const stream = fs.createReadStream(safePath);
