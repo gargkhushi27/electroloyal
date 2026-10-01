@@ -371,43 +371,42 @@ function renderSalesTrendSvg() {
     points.push({ x: x, y: y, val: values[i] });
   }
 
-  // Build SVG path
-  var linePath = "M " + points[0].x + " " + points[0].y;
+  // Build Coral / Pink Bars & Trend Line
+  var barWidth = 36;
+  var svgHtml = '' +
+    '<defs>' +
+      '<linearGradient id="salesBarGrad" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#F56F6A"/>' +
+        '<stop offset="100%" stop-color="#FDA4AF" stop-opacity="0.8"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="salesBarGradHover" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0%" stop-color="#E85B56"/>' +
+        '<stop offset="100%" stop-color="#F56F6A"/>' +
+      '</linearGradient>' +
+    '</defs>' +
+    '<!-- Horizontal Gridlines -->' +
+    '<line x1="' + padX + '" y1="' + padY + '" x2="' + (width - padX) + '" y2="' + padY + '" stroke="#FCE7F3" stroke-dasharray="4 4" stroke-width="1"/>' +
+    '<line x1="' + padX + '" y1="' + (height / 2) + '" x2="' + (width - padX) + '" y2="' + (height / 2) + '" stroke="#FCE7F3" stroke-dasharray="4 4" stroke-width="1"/>' +
+    '<line x1="' + padX + '" y1="' + (height - padY) + '" x2="' + (width - padX) + '" y2="' + (height - padY) + '" stroke="#FCE7F3" stroke-width="1"/>';
+
+  // Render Coral/Pink Bars for each month
+  points.forEach(function(pt, idx) {
+    var barHeight = Math.max(12, (height - padY) - pt.y);
+    var barX = pt.x - barWidth / 2;
+    var barY = (height - padY) - barHeight;
+    svgHtml += '<rect x="' + barX + '" y="' + barY + '" width="' + barWidth + '" height="' + barHeight + '" rx="8" fill="url(#salesBarGrad)"/>';
+    svgHtml += '<text x="' + pt.x + '" y="' + (barY - 8) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#171717">\u20b9' + Math.round(pt.val / 1000) + 'k</text>';
+  });
+
+  // Render Coral Overlay Trend Line
+  var trendLinePath = "M " + points[0].x + " " + points[0].y;
   for (var i = 1; i < points.length; i++) {
     var prev = points[i - 1];
     var curr = points[i];
     var cx = (prev.x + curr.x) / 2;
-    linePath += " C " + cx + " " + prev.y + ", " + cx + " " + curr.y + ", " + curr.x + " " + curr.y;
+    trendLinePath += " C " + cx + " " + prev.y + ", " + cx + " " + curr.y + ", " + curr.x + " " + curr.y;
   }
-
-  var areaPath = linePath + " L " + points[points.length - 1].x + " " + (height - padY) + " L " + points[0].x + " " + (height - padY) + " Z";
-
-  var svgHtml = '' +
-    '<defs>' +
-      '<linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">' +
-        '<stop offset="0%" stop-color="#6D5DFB" stop-opacity="0.28"/>' +
-        '<stop offset="100%" stop-color="#6D5DFB" stop-opacity="0.0"/>' +
-      '</linearGradient>' +
-      '<filter id="glow" x="-20%" y="-20%" width="140%" height="140%">' +
-        '<feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#6D5DFB" flood-opacity="0.35"/>' +
-      '</filter>' +
-    '</defs>' +
-    '<!-- Horizontal Gridlines -->' +
-    '<line x1="' + padX + '" y1="' + padY + '" x2="' + (width - padX) + '" y2="' + padY + '" stroke="#EDE9FE" stroke-dasharray="4 4" stroke-width="1"/>' +
-    '<line x1="' + padX + '" y1="' + (height / 2) + '" x2="' + (width - padX) + '" y2="' + (height / 2) + '" stroke="#EDE9FE" stroke-dasharray="4 4" stroke-width="1"/>' +
-    '<line x1="' + padX + '" y1="' + (height - padY) + '" x2="' + (width - padX) + '" y2="' + (height - padY) + '" stroke="#EDE9FE" stroke-width="1"/>' +
-    '<!-- Filled Area -->' +
-    '<path d="' + areaPath + '" fill="url(#salesGrad)" />' +
-    '<!-- Stroke Line -->' +
-    '<path d="' + linePath + '" fill="none" stroke="#6D5DFB" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)"/>';
-
-  // Add Points & Values
-  points.forEach(function(pt, idx) {
-    svgHtml += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="5" fill="#FFFFFF" stroke="#6D5DFB" stroke-width="3"/>';
-    if (idx === points.length - 1 || idx === points.length - 2) {
-      svgHtml += '<text x="' + pt.x + '" y="' + (pt.y - 10) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#6D5DFB">\u20b9' + Math.round(pt.val / 1000) + 'k</text>';
-    }
-  });
+  svgHtml += '<path d="' + trendLinePath + '" fill="none" stroke="#F56F6A" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>';
 
   svgEl.innerHTML = svgHtml;
 

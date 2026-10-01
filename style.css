@@ -1,46 +1,54 @@
 /* ==========================================================================
    ELECTROLOYAL - Customer Loyalty Management System Styles
-   Theme Primary: #111827 | Purple: #6D5DFB | Light Purple: #8B7CFF | Bg: #F7F7FC
+   Theme Primary: #171717 | Coral: #F56F6A | Soft Pink: #F5A6A1 | Cream: #F8F3F3
    ========================================================================== */
 
 :root {
-  --primary: #111827;
-  --sidebar-bg: #FFFFFF;
-  --sidebar-hover: #F0EEFF;
-  --sidebar-border: #E8EBF2;
-  --purple: #6D5DFB;
-  --purple-light: #8B7CFF;
-  --purple-bg: #F0EEFF;
-  --purple-hover: #5846F5;
-  --purple-glow: rgba(109, 93, 251, 0.35);
-  --cyan: #06B6D4;
-  --cyan-light: #22D3EE;
-  --cyan-glow: rgba(6, 182, 212, 0.3);
-  --accent-primary: #6D5DFB;
-  --accent-soft: #8B7CFF;
-  --accent-hover: #5846F5;
-  --bg-main: #F7F7FC;
+  --primary: #171717;
+  --sidebar-bg: #F9EEEE;
+  --sidebar-hover: #F6DFDE;
+  --sidebar-border: #F0D5D4;
+  --coral: #F56F6A;
+  --coral-soft: #F5A6A1;
+  --coral-light: #FBEAEA;
+  --coral-hover: #E85B56;
+  --coral-glow: rgba(245, 111, 106, 0.25);
+  
+  --purple: #8B7CFF;
+  --purple-light: #A79BFF;
+  --purple-bg: #F4F1FE;
+  
+  --accent-primary: #F56F6A;
+  --accent-soft: #F5A6A1;
+  --accent-hover: #E85B56;
+  
+  --bg-main: #F8F3F3;
+  --bg-secondary: #FBEAEA;
   --card-bg: #FFFFFF;
-  --card-glass: rgba(255, 255, 255, 0.92);
-  --card-glass-border: rgba(232, 235, 242, 0.9);
-  --text-dark: #111827;
-  --text-muted: #64748B;
-  --border-color: #E2E8F0;
-  --shadow-sm: 0 1px 3px rgba(17, 24, 39, 0.05);
-  --shadow-md: 0 6px 18px -2px rgba(17, 24, 39, 0.06), 0 2px 6px -1px rgba(17, 24, 39, 0.03);
-  --shadow-lg: 0 16px 36px -4px rgba(17, 24, 39, 0.09), 0 4px 12px -2px rgba(17, 24, 39, 0.04);
-  --shadow-3d: 0 20px 40px -10px rgba(109, 93, 251, 0.22);
-  --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --radius-xl: 28px;
+  --card-tint: #FFFAFA;
+  --card-glass: rgba(255, 255, 255, 0.95);
+  --card-glass-border: #F3DDDC;
+  
+  --text-dark: #171717;
+  --text-muted: #736E6E;
+  --border-color: #EEDCDA;
+  
+  --shadow-sm: 0 2px 6px rgba(245, 111, 106, 0.05);
+  --shadow-md: 0 8px 24px -4px rgba(245, 111, 106, 0.08), 0 2px 6px -1px rgba(23, 23, 23, 0.03);
+  --shadow-lg: 0 16px 36px -4px rgba(245, 111, 106, 0.12), 0 4px 12px -2px rgba(23, 23, 23, 0.03);
+  --shadow-card: 0 4px 16px rgba(245, 111, 106, 0.07);
+  
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
   --transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   
-  /* Status & Tier Colors */
-  --bronze: #D97706;
-  --silver: #64748B;
-  --gold: #EAB308;
-  --diamond: #06B6D4;
+  /* Status & Tier Colors (Harmonious with Soft Warm Palette) */
+  --bronze: #E08244;
+  --silver: #8A8594;
+  --gold: #F59E0B;
+  --diamond: #EC4899;
   --success: #10B981;
   --danger: #EF4444;
 }
@@ -66,7 +74,7 @@ body {
   min-height: 100vh;
 }
 
-/* SIDEBAR */
+/* SIDEBAR - Warm Soft Blush #F9EEEE */
 .sidebar {
   width: 260px;
   background-color: var(--sidebar-bg);
@@ -79,7 +87,7 @@ body {
   left: 0;
   z-index: 100;
   border-right: 1px solid var(--sidebar-border);
-  box-shadow: 2px 0 12px rgba(23, 23, 23, 0.03);
+  box-shadow: 2px 0 14px rgba(245, 111, 106, 0.04);
 }
 
 .sidebar-header {
@@ -93,14 +101,14 @@ body {
 .logo-icon {
   width: 40px;
   height: 40px;
-  background: var(--accent-primary);
+  background: var(--coral);
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 18px;
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(232, 111, 97, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 111, 106, 0.3);
 }
 
 .logo-text h2 {
@@ -113,7 +121,7 @@ body {
 .logo-text p {
   font-size: 11px;
   color: var(--text-muted);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .sidebar-nav {
@@ -135,7 +143,7 @@ body {
   align-items: center;
   gap: 14px;
   padding: 11px 16px;
-  color: var(--text-muted);
+  color: var(--text-dark);
   text-decoration: none;
   font-size: 13.5px;
   font-weight: 600;
@@ -147,6 +155,7 @@ body {
   font-size: 16px;
   width: 20px;
   text-align: center;
+  color: var(--text-dark);
 }
 
 .sidebar-nav li:hover a {
@@ -155,9 +164,13 @@ body {
 }
 
 .sidebar-nav li.active a {
-  background-color: var(--accent-primary);
+  background-color: var(--coral);
   color: #FFFFFF;
-  box-shadow: 0 4px 12px rgba(232, 111, 97, 0.3);
+  box-shadow: 0 4px 14px rgba(245, 111, 106, 0.3);
+}
+
+.sidebar-nav li.active a i {
+  color: #FFFFFF;
 }
 
 .sidebar-footer {
@@ -2361,16 +2374,16 @@ body {
 }
 
 /* ==========================================================================
-   LARGE 3D ELECTRONICS HERO SECTION
+   LARGE WARM PEACH & BLUSH HERO SECTION (Reference Matched)
    ========================================================================== */
 .dashboard-hero-card {
   position: relative;
-  background: linear-gradient(135deg, #0F172A 0%, #1E1B4B 60%, #312E81 100%);
+  background: linear-gradient(135deg, #FDF4F3 0%, #FBEAEA 50%, #F9E2E1 100%);
   border-radius: var(--radius-xl);
-  padding: 40px 44px;
+  padding: 44px 48px;
   margin-bottom: 28px;
-  border: 1px solid rgba(139, 124, 255, 0.2);
-  box-shadow: 0 20px 40px -15px rgba(30, 27, 75, 0.4);
+  border: 1px solid #F3DDDC;
+  box-shadow: 0 10px 30px -8px rgba(245, 111, 106, 0.12), 0 4px 12px rgba(23, 23, 23, 0.02);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -2380,155 +2393,97 @@ body {
 
 .hero-bg-accent {
   position: absolute;
-  top: -40%;
+  top: -30%;
   right: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(109, 93, 251, 0.25) 0%, rgba(6, 182, 212, 0.12) 50%, transparent 70%);
-  filter: blur(50px);
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, rgba(245, 166, 161, 0.35) 0%, rgba(251, 234, 234, 0.2) 50%, transparent 70%);
+  filter: blur(55px);
   pointer-events: none;
 }
 
 .hero-grid-pattern {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-image: radial-gradient(rgba(245, 111, 106, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
   pointer-events: none;
 }
 
 .hero-welcome-left {
   position: relative;
   z-index: 2;
-  max-width: 580px;
-  color: #FFFFFF;
-}
-
-.hero-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 30px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-  color: #E0E7FF;
-  margin-bottom: 16px;
-}
-
-.status-indicator-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #10B981;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #10B981;
+  max-width: 540px;
+  color: var(--text-dark);
 }
 
 .hero-heading {
-  font-size: 34px;
+  font-size: 38px;
   font-weight: 800;
-  line-height: 1.18;
-  margin-bottom: 12px;
-  letter-spacing: -0.5px;
-}
-
-.hero-heading-gradient {
-  background: linear-gradient(135deg, #FFFFFF 0%, #C7D2FE 50%, #A5B4FC 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  line-height: 1.15;
+  margin-bottom: 14px;
+  letter-spacing: -0.8px;
+  color: #171717;
 }
 
 .hero-description {
-  font-size: 14.5px;
-  color: #CBD5E1;
+  font-size: 15px;
+  color: #5C5656;
   line-height: 1.6;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  font-weight: 500;
 }
 
 .hero-btn-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
-  margin-bottom: 28px;
 }
 
-.btn-hero-action {
-  padding: 10px 20px;
-  font-size: 13.5px;
-  font-weight: 600;
+.btn-hero-coral {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
   border-radius: var(--radius-md);
-}
-
-.hero-welcome-left .btn-primary {
-  background: #6D5DFB;
+  background: var(--coral);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 14px rgba(109, 93, 251, 0.4);
-}
-
-.hero-welcome-left .btn-primary:hover {
-  background: #5846F5;
-  transform: translateY(-2px);
-}
-
-.hero-welcome-left .btn-secondary {
-  background: rgba(255, 255, 255, 0.12);
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(8px);
-}
-
-.hero-welcome-left .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
-
-.hero-quick-indicators {
-  display: flex;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(245, 111, 106, 0.35);
+  transition: var(--transition);
+  display: inline-flex;
   align-items: center;
-  gap: 20px;
-  padding: 14px 20px;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 8px;
+}
+
+.btn-hero-coral:hover {
+  background: var(--coral-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(245, 111, 106, 0.42);
+}
+
+.btn-hero-white {
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 700;
   border-radius: var(--radius-md);
-  max-width: fit-content;
-}
-
-.hero-ind-item {
-  display: flex;
+  background: #FFFFFF;
+  color: #171717;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(245, 111, 106, 0.08);
+  transition: var(--transition);
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.hero-ind-item i {
-  font-size: 16px;
-}
-
-.hero-ind-item small {
-  display: block;
-  font-size: 10.5px;
-  color: #94A3B8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.hero-ind-item strong {
-  display: block;
-  font-size: 13px;
-  color: #FFFFFF;
-}
-
-.hero-ind-divider {
-  width: 1px;
-  height: 28px;
-  background: rgba(255, 255, 255, 0.15);
+.btn-hero-white:hover {
+  background: #FFF5F5;
+  border-color: var(--coral-soft);
+  transform: translateY(-2px);
+  color: var(--coral);
 }
 
 /* 3D ELECTRONICS VISUAL STAGE - PREMIUM COMPOSITION */
@@ -2552,11 +2507,11 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 320px;
-  height: 320px;
+  width: 340px;
+  height: 340px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(109, 93, 251, 0.45) 0%, rgba(6, 182, 212, 0.22) 45%, transparent 70%);
-  filter: blur(34px);
+  background: radial-gradient(circle, rgba(245, 166, 161, 0.45) 0%, rgba(251, 234, 234, 0.25) 50%, transparent 70%);
+  filter: blur(40px);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -2568,7 +2523,7 @@ body {
   width: 300px;
   height: 300px;
   transform: translate(-50%, -50%);
-  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  border: 1px dashed rgba(245, 111, 106, 0.2);
   border-radius: 50%;
   pointer-events: none;
   animation: rotateCircuit 40s linear infinite;
@@ -2585,7 +2540,7 @@ body {
   transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Product Render Wrapper & Badges */
+/* Product Render Wrapper & Badges (Clean Soft Lighting) */
 .product-render-wrap {
   position: relative;
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
@@ -2593,8 +2548,8 @@ body {
 }
 
 .product-render-wrap:hover {
-  transform: scale(1.05) translateY(-4px);
-  filter: drop-shadow(0 15px 25px rgba(109, 93, 251, 0.45));
+  transform: scale(1.04) translateY(-4px);
+  filter: drop-shadow(0 14px 22px rgba(245, 111, 106, 0.25));
 }
 
 .render-img {
@@ -2606,15 +2561,15 @@ body {
 
 .render-floating-tag {
   position: absolute;
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--border-color);
   border-radius: 20px;
-  padding: 3px 9px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 14px rgba(245, 111, 106, 0.12);
   pointer-events: none;
   opacity: 0;
   transform: translateY(6px);
@@ -2628,15 +2583,15 @@ body {
 }
 
 .render-floating-tag span {
-  font-size: 10px;
-  font-weight: 600;
-  color: #E2E8F0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #171717;
 }
 
 .render-floating-tag strong {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-  color: #FBBF24;
+  color: var(--coral);
 }
 
 /* 1. LAPTOP (Center-Back Anchor) */
@@ -2645,10 +2600,6 @@ body {
   left: 60px;
   width: 290px;
   z-index: 3;
-}
-
-.laptop-render .render-img {
-  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.4));
 }
 
 .tag-laptop {
@@ -2669,20 +2620,16 @@ body {
 }
 
 .phone-render {
-  animation: floatPhone 5s ease-in-out infinite;
+  animation: floatPhone 6s ease-in-out infinite;
 }
 
 @keyframes floatPhone {
-  0%, 100% { transform: translateY(0) rotate(-6deg); }
-  50% { transform: translateY(-7px) rotate(-4deg); }
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50% { transform: translateY(-6px) rotate(-3deg); }
 }
 
 .phone-render:hover {
   animation-play-state: paused;
-}
-
-.phone-render .render-img {
-  filter: drop-shadow(0 18px 25px rgba(0, 0, 0, 0.5));
 }
 
 .tag-phone {
@@ -2699,20 +2646,16 @@ body {
 }
 
 .headphones-render {
-  animation: floatHeadphones 6s ease-in-out infinite;
+  animation: floatHeadphones 7s ease-in-out infinite;
 }
 
 @keyframes floatHeadphones {
-  0%, 100% { transform: translateY(0) rotate(8deg); }
-  50% { transform: translateY(-9px) rotate(6deg); }
+  0%, 100% { transform: translateY(0) rotate(6deg); }
+  50% { transform: translateY(-7px) rotate(4deg); }
 }
 
 .headphones-render:hover {
   animation-play-state: paused;
-}
-
-.headphones-render .render-img {
-  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.45));
 }
 
 .tag-headphones {
@@ -2729,20 +2672,16 @@ body {
 }
 
 .watch-render {
-  animation: floatWatch 4.5s ease-in-out infinite;
+  animation: floatWatch 5.5s ease-in-out infinite;
 }
 
 @keyframes floatWatch {
   0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(-6px) rotate(-2deg); }
+  50% { transform: translateY(-5px) rotate(-2deg); }
 }
 
 .watch-render:hover {
   animation-play-state: paused;
-}
-
-.watch-render .render-img {
-  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.45));
 }
 
 .tag-watch {
@@ -2759,20 +2698,16 @@ body {
 }
 
 .earbuds-render {
-  animation: floatEarbuds 4s ease-in-out infinite;
+  animation: floatEarbuds 5s ease-in-out infinite;
 }
 
 @keyframes floatEarbuds {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-5px); }
 }
 
 .earbuds-render:hover {
   animation-play-state: paused;
-}
-
-.earbuds-render .render-img {
-  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.4));
 }
 
 .tag-earbuds {
@@ -2780,7 +2715,7 @@ body {
   left: 20px;
 }
 
-/* Floating 3D Loyalty Coin */
+/* Floating 3D Loyalty Coin (Coral/Gold) */
 .layer-coin {
   top: 30px;
   right: 175px;
@@ -2789,21 +2724,21 @@ body {
 
 .floating-loyalty-coin {
   position: relative;
-  width: 52px;
-  height: 52px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #F59E0B, #D97706);
-  border: 2px solid #FDE68A;
-  box-shadow: 0 10px 22px rgba(217, 119, 6, 0.45);
+  background: linear-gradient(135deg, #F5A6A1, #F56F6A);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 8px 18px rgba(245, 111, 106, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: floatCoin 3s ease-in-out infinite;
+  animation: floatCoin 4s ease-in-out infinite;
 }
 
 @keyframes floatCoin {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6px); }
 }
 
 .coin-inner {
@@ -2838,31 +2773,31 @@ body {
 }
 
 .floating-vip-chip {
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(6, 182, 212, 0.4);
+  border: 1px solid #F3DDDC;
   border-radius: 24px;
-  padding: 5px 12px;
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #FFFFFF;
-  box-shadow: 0 8px 20px rgba(6, 182, 212, 0.25);
+  color: #171717;
+  box-shadow: 0 6px 16px rgba(245, 111, 106, 0.12);
 }
 
 .floating-vip-chip strong {
   display: block;
   font-size: 10.5px;
-  color: #22D3EE;
+  color: var(--coral);
 }
 
 .floating-vip-chip small {
   font-size: 9px;
-  color: #94A3B8;
+  color: var(--text-muted);
 }
 
 /* ==========================================================================
-   KPI CARDS ENHANCEMENTS & SPARKLINES
+   KPI CARDS ENHANCEMENTS & SPARKLINES (Warm White + Subtle Pink Shadow)
    ========================================================================== */
 .kpi-card-enhanced {
   position: relative;
@@ -2871,6 +2806,17 @@ body {
   align-items: flex-start;
   gap: 16px;
   padding: 22px 20px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 18px rgba(245, 111, 106, 0.06);
+  transition: var(--transition);
+}
+
+.kpi-card-enhanced:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(245, 111, 106, 0.12);
+  border-color: var(--coral-soft);
 }
 
 .stat-icon-wrap {
@@ -2885,27 +2831,27 @@ body {
 }
 
 .stat-icon-wrap.purple-glow {
-  background: var(--purple-bg);
-  color: var(--purple);
-  box-shadow: 0 4px 14px rgba(109, 93, 251, 0.2);
+  background: #FFF1F2;
+  color: var(--coral);
+  box-shadow: 0 4px 12px rgba(245, 111, 106, 0.15);
 }
 
 .stat-icon-wrap.gold-glow {
   background: #FEF3C7;
   color: #D97706;
-  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.2);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.15);
 }
 
 .stat-icon-wrap.blue-glow {
-  background: #E0F2FE;
-  color: #0284C7;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.2);
+  background: #FDF2F8;
+  color: #DB2777;
+  box-shadow: 0 4px 12px rgba(219, 39, 119, 0.15);
 }
 
 .stat-icon-wrap.cyan-glow {
-  background: #CFFAFE;
-  color: #0891B2;
-  box-shadow: 0 4px 14px rgba(6, 182, 212, 0.2);
+  background: #F5EEFD;
+  color: #9333EA;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.15);
 }
 
 .stat-details {
@@ -2946,8 +2892,8 @@ body {
 }
 
 .trend-badge.trend-up {
-  background: #D1FAE5;
-  color: #065F46;
+  background: #FEE2E2;
+  color: #991B1B;
 }
 
 .kpi-sparkline-row {
@@ -2976,7 +2922,7 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
-  background: #F8FAFC;
+  background: #FFF9F9;
   padding: 14px 18px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
@@ -3001,10 +2947,10 @@ body {
   width: 100%;
   height: 180px;
   position: relative;
-  background: #FAF5FF;
+  background: #FFF5F5;
   border-radius: var(--radius-md);
   padding: 10px 14px;
-  border: 1px solid #EDE9FE;
+  border: 1px solid #FCE7F3;
   overflow: hidden;
 }
 
@@ -3120,7 +3066,7 @@ body {
 }
 
 /* ==========================================================================
-   TOP SELLING PRODUCTS GRID (3D TILT HOVER)
+   TOP SELLING PRODUCTS GRID (Clean Retail Hover)
    ========================================================================== */
 .top-selling-products-grid {
   display: grid;
@@ -3129,23 +3075,22 @@ body {
 }
 
 .top-selling-card {
-  background: #F8FAFC;
+  background: #FFF9F9;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  perspective: 600px;
 }
 
 .top-selling-card:hover {
   background: #FFFFFF;
-  border-color: rgba(109, 93, 251, 0.4);
-  transform: translateY(-5px) rotateX(2deg);
-  box-shadow: 0 12px 24px -4px rgba(109, 93, 251, 0.15);
+  border-color: var(--coral-soft);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px -4px rgba(245, 111, 106, 0.16);
 }
 
 .top-card-header {
@@ -3158,8 +3103,8 @@ body {
 .top-rank-badge {
   font-size: 10px;
   font-weight: 800;
-  color: #D97706;
-  background: #FEF3C7;
+  color: #B91C1C;
+  background: #FEE2E2;
   padding: 2px 7px;
   border-radius: 8px;
 }
@@ -3226,7 +3171,7 @@ body {
 }
 
 /* ==========================================================================
-   LOYALTY PERFORMANCE METRICS & QUICK ACTIONS
+   LOYALTY PERFORMANCE METRICS & QUICK ACTIONS (Warm Clean Palette)
    ========================================================================== */
 .loyalty-metrics-row-cards {
   display: grid;
@@ -3235,7 +3180,7 @@ body {
 }
 
 .loyalty-sub-metric-card {
-  background: #F8FAFC;
+  background: #FFF9F9;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: 14px;
@@ -3288,7 +3233,7 @@ body {
   align-items: center;
   gap: 12px;
   padding: 12px 14px;
-  background: #F8FAFC;
+  background: #FFF9F9;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   cursor: pointer;
@@ -3299,8 +3244,8 @@ body {
 
 .quick-action-btn:hover {
   background: #FFFFFF;
-  border-color: rgba(109, 93, 251, 0.4);
-  box-shadow: 0 4px 12px rgba(109, 93, 251, 0.08);
+  border-color: var(--coral-soft);
+  box-shadow: 0 4px 12px rgba(245, 111, 106, 0.12);
   transform: translateX(3px);
 }
 

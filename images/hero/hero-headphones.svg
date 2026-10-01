@@ -1,61 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 420" width="100%" height="100%">
   <defs>
-    <!-- Headband Gradient -->
+    <!-- Soft Rose-Gold / Light Aluminum Headband Arch -->
     <linearGradient id="headbandArch" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#1E293B"/>
-      <stop offset="30%" stop-color="#475569"/>
-      <stop offset="50%" stop-color="#94A3B8"/>
-      <stop offset="70%" stop-color="#475569"/>
-      <stop offset="100%" stop-color="#1E293B"/>
+      <stop offset="0%" stop-color="#FCE7F3"/>
+      <stop offset="30%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#F5A6A1"/>
+      <stop offset="70%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#FCE7F3"/>
     </linearGradient>
 
-    <!-- Metallic Stem & Yoke -->
+    <!-- Metallic Stem & Yoke (Warm champagne silver) -->
     <linearGradient id="metalYoke" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#E2E8F0"/>
-      <stop offset="50%" stop-color="#64748B"/>
-      <stop offset="100%" stop-color="#334155"/>
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#CBD5E1"/>
     </linearGradient>
 
-    <!-- Ear Cup Outer Shell -->
+    <!-- Ear Cup Outer Shell (Premium Blush Peach Coral) -->
     <radialGradient id="cupShellLeft" cx="40%" cy="40%" r="70%">
-      <stop offset="0%" stop-color="#6D5DFB"/>
-      <stop offset="45%" stop-color="#4338CA"/>
-      <stop offset="85%" stop-color="#1E1B4B"/>
-      <stop offset="100%" stop-color="#0F172A"/>
+      <stop offset="0%" stop-color="#FFF1F2"/>
+      <stop offset="40%" stop-color="#FDA4AF"/>
+      <stop offset="80%" stop-color="#F56F6A"/>
+      <stop offset="100%" stop-color="#E11D48"/>
     </radialGradient>
 
     <radialGradient id="cupShellRight" cx="40%" cy="40%" r="70%">
-      <stop offset="0%" stop-color="#818CF8"/>
-      <stop offset="50%" stop-color="#4F46E5"/>
-      <stop offset="90%" stop-color="#1E1B4B"/>
-      <stop offset="100%" stop-color="#0F172A"/>
+      <stop offset="0%" stop-color="#FFF1F2"/>
+      <stop offset="45%" stop-color="#FDA4AF"/>
+      <stop offset="85%" stop-color="#F56F6A"/>
+      <stop offset="100%" stop-color="#E11D48"/>
     </radialGradient>
 
-    <!-- Cushion Gradient -->
+    <!-- Cushion Gradient (Warm Soft Sand/Cream) -->
     <linearGradient id="cushionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="50%" stop-color="#334155"/>
-      <stop offset="100%" stop-color="#1E293B"/>
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#FDF2F8"/>
+      <stop offset="100%" stop-color="#E2E8F0"/>
     </linearGradient>
 
-    <!-- Drop Shadow -->
+    <!-- Soft Warm Drop Shadow -->
     <filter id="headphoneShadow" x="-20%" y="-20%" width="140%" height="150%">
-      <feDropShadow dx="0" dy="25" stdDeviation="22" flood-color="#0F172A" flood-opacity="0.45"/>
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#F43F5E" flood-opacity="0.16"/>
     </filter>
   </defs>
 
   <g filter="url(#headphoneShadow)">
-    <!-- Headband Soft Mesh Cushion Padding (Inner Underneath) -->
-    <path d="M 125 140 C 130 75, 270 75, 275 140 C 265 85, 135 85, 125 140 Z" fill="#0F172A" stroke="#334155" stroke-width="2"/>
+    <!-- Headband Soft Mesh Cushion Padding -->
+    <path d="M 125 140 C 130 75, 270 75, 275 140 C 265 85, 135 85, 125 140 Z" fill="#FDF2F8" stroke="#FCE7F3" stroke-width="2"/>
 
     <!-- Main Outer Headband Arch -->
     <path d="M 105 170 C 110 50, 290 50, 295 170" fill="none" stroke="url(#headbandArch)" stroke-width="22" stroke-linecap="round"/>
-    <path d="M 105 170 C 110 50, 290 50, 295 170" fill="none" stroke="#FFFFFF" stroke-opacity="0.25" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 105 170 C 110 50, 290 50, 295 170" fill="none" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="3" stroke-linecap="round"/>
 
     <!-- Left Extension Yoke / Slider -->
-    <rect x="94" y="160" width="16" height="55" rx="6" fill="url(#metalYoke)" stroke="#CBD5E1" stroke-width="1"/>
+    <rect x="94" y="160" width="16" height="55" rx="6" fill="url(#metalYoke)" stroke="#FFFFFF" stroke-width="1"/>
     <!-- Right Extension Yoke / Slider -->
-    <rect x="290" y="160" width="16" height="55" rx="6" fill="url(#metalYoke)" stroke="#CBD5E1" stroke-width="1"/>
+    <rect x="290" y="160" width="16" height="55" rx="6" fill="url(#metalYoke)" stroke="#FFFFFF" stroke-width="1"/>
 
     <!-- Left Gimbal Fork -->
     <path d="M 102 210 C 75 220, 60 270, 75 320" fill="none" stroke="url(#metalYoke)" stroke-width="8" stroke-linecap="round"/>
@@ -63,23 +63,23 @@
     <path d="M 298 210 C 325 220, 340 270, 325 320" fill="none" stroke="url(#metalYoke)" stroke-width="8" stroke-linecap="round"/>
 
     <!-- LEFT EAR CUP (Angled) -->
-    <!-- Plush Cushion -->
-    <ellipse cx="100" cy="285" rx="36" ry="60" fill="url(#cushionGrad)" transform="rotate(-15 100 285)"/>
-    <ellipse cx="98" cy="285" rx="28" ry="48" fill="#0F172A" transform="rotate(-15 98 285)"/>
-    <!-- Aluminum Outer Shell -->
-    <ellipse cx="90" cy="285" rx="30" ry="54" fill="url(#cupShellLeft)" stroke="#A5B4FC" stroke-width="1.5" transform="rotate(-15 90 285)"/>
-    <!-- Metallic Bevel Ring & Logo -->
-    <circle cx="86" cy="282" r="14" fill="#1E1B4B" stroke="#818CF8" stroke-width="1.2"/>
-    <path d="M 82 284 L 86 276 L 90 284 Z" fill="#67E8F9"/>
+    <!-- Plush Cream Cushion -->
+    <ellipse cx="100" cy="285" rx="36" ry="60" fill="url(#cushionGrad)" stroke="#FCE7F3" stroke-width="1" transform="rotate(-15 100 285)"/>
+    <ellipse cx="98" cy="285" rx="28" ry="48" fill="#FFF1F2" transform="rotate(-15 98 285)"/>
+    <!-- Rose/Coral Aluminum Outer Shell -->
+    <ellipse cx="90" cy="285" rx="30" ry="54" fill="url(#cupShellLeft)" stroke="#FFFFFF" stroke-width="1.8" transform="rotate(-15 90 285)"/>
+    <!-- Bevel Ring Accent -->
+    <circle cx="86" cy="282" r="14" fill="#FFFFFF" fill-opacity="0.3" stroke="#FFFFFF" stroke-width="1.2"/>
+    <path d="M 82 284 L 86 276 L 90 284 Z" fill="#FFFFFF"/>
 
     <!-- RIGHT EAR CUP (Angled) -->
-    <!-- Plush Cushion -->
-    <ellipse cx="300" cy="285" rx="36" ry="60" fill="url(#cushionGrad)" transform="rotate(15 300 285)"/>
-    <ellipse cx="302" cy="285" rx="28" ry="48" fill="#0F172A" transform="rotate(15 302 285)"/>
-    <!-- Aluminum Outer Shell -->
-    <ellipse cx="310" cy="285" rx="30" ry="54" fill="url(#cupShellRight)" stroke="#A5B4FC" stroke-width="1.5" transform="rotate(15 310 285)"/>
-    <!-- Metallic Bevel Ring & Logo -->
-    <circle cx="314" cy="282" r="14" fill="#1E1B4B" stroke="#818CF8" stroke-width="1.2"/>
-    <path d="M 310 284 L 314 276 L 318 284 Z" fill="#67E8F9"/>
+    <!-- Plush Cream Cushion -->
+    <ellipse cx="300" cy="285" rx="36" ry="60" fill="url(#cushionGrad)" stroke="#FCE7F3" stroke-width="1" transform="rotate(15 300 285)"/>
+    <ellipse cx="302" cy="285" rx="28" ry="48" fill="#FFF1F2" transform="rotate(15 302 285)"/>
+    <!-- Rose/Coral Aluminum Outer Shell -->
+    <ellipse cx="310" cy="285" rx="30" ry="54" fill="url(#cupShellRight)" stroke="#FFFFFF" stroke-width="1.8" transform="rotate(15 310 285)"/>
+    <!-- Bevel Ring Accent -->
+    <circle cx="314" cy="282" r="14" fill="#FFFFFF" fill-opacity="0.3" stroke="#FFFFFF" stroke-width="1.2"/>
+    <path d="M 310 284 L 314 276 L 318 284 Z" fill="#FFFFFF"/>
   </g>
 </svg>
