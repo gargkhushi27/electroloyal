@@ -66,16 +66,12 @@
           <p id="headerSubtitle">Overview of store sales, customer loyalty, and rewards</p>
         </div>
         <div class="header-actions">
-          <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="globalSearch" placeholder="Search customers, products...">
-          </div>
           <div class="header-icon-btn notification-btn" title="Notifications">
             <i class="fa-regular fa-bell"></i>
             <span class="badge-dot"></span>
           </div>
           <div class="user-profile">
-            <img src="https://ui-avatars.com/api/?name=Admin+Manager&background=6D5DFB&color=fff" alt="Admin Avatar">
+            <div class="admin-avatar-circle"><i class="fa-solid fa-user"></i></div>
             <span>Store Manager</span>
           </div>
         </div>
@@ -217,7 +213,7 @@
                 <tr>
                   <th>Customer Name</th>
                   <th>Customer ID</th>
-                  <th>Contact Information</th>
+                  <th>Phone</th>
                   <th>Membership</th>
                   <th>Total Spending</th>
                   <th>Points</th>
@@ -249,9 +245,7 @@
               </div>
               <p class="prof-id"><i class="fa-solid fa-id-card"></i> <span id="profId">ELC-000001</span></p>
               <div class="prof-meta">
-                <span><i class="fa-solid fa-envelope"></i> <span id="profEmail">email@example.com</span></span>
                 <span><i class="fa-solid fa-phone"></i> <span id="profPhone">+91 9876543210</span></span>
-                <span><i class="fa-solid fa-cake-candles"></i> DOB: <span id="profDob">1995-05-15</span></span>
               </div>
             </div>
           </div>
@@ -437,9 +431,12 @@
                 </ul>
               </div>
 
-              <div class="detail-actions">
-                <button class="btn btn-primary btn-lg" id="detailAddPurchaseBtn">
-                  <i class="fa-solid fa-cart-plus"></i> Buy for Customer
+              <div class="detail-actions" style="display:flex;gap:12px;">
+                <button class="btn btn-primary btn-lg" id="detailAddToCartBtn">
+                  <i class="fa-solid fa-cart-plus"></i> Add to Cart
+                </button>
+                <button class="btn btn-secondary btn-lg" id="detailAddPurchaseBtn">
+                  <i class="fa-solid fa-bag-shopping"></i> Quick Purchase
                 </button>
               </div>
             </div>
@@ -588,16 +585,8 @@
           <input type="text" id="custName" required placeholder="e.g. Rahul Sharma">
         </div>
         <div class="form-group">
-          <label for="custEmail">Email Address *</label>
-          <input type="email" id="custEmail" required placeholder="e.g. rahul@example.com">
-        </div>
-        <div class="form-group">
           <label for="custPhone">Phone Number *</label>
           <input type="tel" id="custPhone" required placeholder="e.g. 9876543210">
-        </div>
-        <div class="form-group">
-          <label for="custDob">Date of Birth *</label>
-          <input type="date" id="custDob" required>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" onclick="closeModal('customerModal')">Cancel</button>
@@ -616,10 +605,16 @@
       </div>
       <form id="purchaseForm">
         <div class="form-group">
-          <label for="purchCustomerSelect">Customer *</label>
-          <select id="purchCustomerSelect" class="form-select" required>
-            <!-- Dynamic Customers Option -->
-          </select>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <label style="margin-bottom:0;">Customer *</label>
+            <button type="button" class="btn-link" style="font-size:12px;" onclick="openAddCustomerModal()"><i class="fa-solid fa-user-plus"></i> + Add New Customer</button>
+          </div>
+          <div class="customer-search-wrap">
+            <input type="text" id="purchCustSearch" placeholder="Search by name, phone, or ID (e.g. 9876543210)..." autocomplete="off">
+            <div class="customer-search-results" id="purchCustResults"></div>
+          </div>
+          <input type="hidden" id="purchCustomerSelect">
+          <div id="purchSelectedCustInfo" class="selected-customer-info" style="display:none;margin-top:8px;"></div>
         </div>
         <div class="form-group">
           <label for="purchProductSelect">Select Product *</label>
@@ -635,7 +630,7 @@
           <div class="form-group">
             <label for="purchPayment">Payment Method *</label>
             <select id="purchPayment" class="form-select" required>
-              <option value="Online">Online / Card / UPI</option>
+              <option value="Online">Online</option>
               <option value="Cash">Cash</option>
             </select>
           </div>
@@ -653,12 +648,20 @@
             <strong id="calcUnitPrice">₹0</strong>
           </div>
           <div class="calc-row">
+            <span>Available Stock:</span>
+            <strong id="calcStock">0 units</strong>
+          </div>
+          <div class="calc-row">
             <span>Total Amount:</span>
             <strong id="calcTotalAmount" class="text-purple">₹0</strong>
           </div>
           <div class="calc-row">
             <span>Loyalty Points Earned:</span>
             <strong id="calcPointsEarned" class="text-gold">+0 Points</strong>
+          </div>
+          <div class="calc-row" id="calcTierRow" style="display:none;">
+            <span>Projected Membership:</span>
+            <strong id="calcProjectedTier" class="text-purple">Bronze</strong>
           </div>
           <div class="calc-note">
             <i class="fa-solid fa-lightbulb"></i> Points Formula: Math.floor(Amount / 500) * 10
@@ -700,7 +703,7 @@
           <button class="btn btn-danger" onclick="clearDemoData()"><i class="fa-solid fa-trash-can"></i> Reset Demo Data</button>
         </div>
       </div>
-      <div class="modal-footer">
+      <div class="modal-footer" style="padding:0 24px 20px 24px;">
         <button type="button" class="btn btn-secondary" onclick="closeModal('backupModal')">Close</button>
       </div>
     </div>
@@ -800,6 +803,115 @@
           <button type="submit" class="btn btn-primary" id="saveProductBtn">Add Product</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- CART PANEL (Slide-in from right) -->
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCartPanel()"></div>
+  <div class="cart-panel" id="cartPanel">
+    <div class="cart-panel-header">
+      <h3><i class="fa-solid fa-cart-shopping text-purple"></i> Shopping Cart</h3>
+      <button class="modal-close" onclick="closeCartPanel()">&times;</button>
+    </div>
+    <div class="cart-items-list" id="cartItemsList">
+      <!-- Dynamic Cart Items -->
+    </div>
+    <div class="cart-panel-footer" id="cartPanelFooter">
+      <div class="cart-total-row">
+        <span>Total Amount:</span>
+        <strong id="cartTotalAmount">₹0</strong>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%;" id="cartCheckoutBtn" onclick="openCartCheckout()">
+        <i class="fa-solid fa-bag-shopping"></i> Proceed to Checkout
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING CART BUTTON -->
+  <div class="floating-cart-btn" id="floatingCartBtn" onclick="openCartPanel()">
+    <i class="fa-solid fa-cart-shopping"></i>
+    <span class="cart-badge" id="cartBadge">0</span>
+  </div>
+
+  <!-- CART CHECKOUT MODAL -->
+  <div class="modal-overlay" id="cartCheckoutModal">
+    <div class="modal-card modal-card-wide">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-bag-shopping text-purple"></i> Checkout</h3>
+        <button class="modal-close" onclick="closeModal('cartCheckoutModal')">&times;</button>
+      </div>
+      <div style="padding:24px;max-height:75vh;overflow-y:auto;">
+        <!-- Cart Summary -->
+        <div class="checkout-cart-summary" id="checkoutCartSummary">
+          <!-- Dynamic Cart Items Summary -->
+        </div>
+
+        <!-- Customer Search -->
+        <div class="form-group">
+          <label>Customer * <small style="color:#6B7280;">Search by name, phone, or ID</small></label>
+          <div class="customer-search-wrap">
+            <input type="text" id="checkoutCustSearch" placeholder="e.g. 9876543210 or Aarav" autocomplete="off">
+            <div class="customer-search-results" id="checkoutCustResults"></div>
+          </div>
+          <input type="hidden" id="checkoutSelectedCustId">
+          <div id="checkoutSelectedCustInfo" class="selected-customer-info" style="display:none;"></div>
+        </div>
+
+        <!-- Add New Customer inline -->
+        <div id="checkoutNewCustForm" class="inline-new-customer" style="display:none;">
+          <h4><i class="fa-solid fa-user-plus text-purple"></i> Add New Customer</h4>
+          <div class="form-row grid-2-col">
+            <div class="form-group">
+              <label>Full Name *</label>
+              <input type="text" id="checkoutNewCustName" placeholder="e.g. Rahul Sharma">
+            </div>
+            <div class="form-group">
+              <label>Phone *</label>
+              <input type="tel" id="checkoutNewCustPhone" placeholder="e.g. 9876543210">
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="createCustomerFromCheckout()">
+            <i class="fa-solid fa-check"></i> Create & Select Customer
+          </button>
+        </div>
+
+        <!-- Payment -->
+        <div class="form-row grid-2-col">
+          <div class="form-group">
+            <label for="checkoutPayment">Payment Method *</label>
+            <select id="checkoutPayment" class="form-select">
+              <option value="Online">Online</option>
+              <option value="Cash">Cash</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="checkoutDate">Date *</label>
+            <input type="date" id="checkoutDate">
+          </div>
+        </div>
+
+        <!-- Checkout Summary -->
+        <div class="calculation-summary-box">
+          <div class="calc-row">
+            <span>Cart Total:</span>
+            <strong id="checkoutTotal" class="text-purple">₹0</strong>
+          </div>
+          <div class="calc-row">
+            <span>Loyalty Points Earned:</span>
+            <strong id="checkoutPoints" class="text-gold">+0 Points</strong>
+          </div>
+          <div class="calc-note">
+            <i class="fa-solid fa-lightbulb"></i> Points Formula: Math.floor(Amount / 500) * 10
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('cartCheckoutModal')">Cancel</button>
+          <button type="button" class="btn btn-primary" id="completeCartPurchaseBtn" onclick="handleCartCheckoutPurchase()">
+            <i class="fa-solid fa-check-circle"></i> Complete Purchase
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
