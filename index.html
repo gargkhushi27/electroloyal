@@ -402,51 +402,7 @@
           </div>
         </div>
 
-        <!-- TOP SELLING PRODUCTS + RECENT TRANSACTIONS -->
-        <div class="dashboard-grid mb-4">
-          <!-- Top Selling Products Section -->
-          <div class="card grid-col-6 glass-card">
-            <div class="card-header">
-              <div>
-                <h2><i class="fa-solid fa-fire text-gold"></i> Top Selling Electronics</h2>
-                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Top ranked electronics products by store demand</p>
-              </div>
-              <button class="btn-link" onclick="navigateTo('products')">View All (35)</button>
-            </div>
-            <div class="top-selling-products-grid" id="dashTopSellingProductsGrid">
-              <!-- Dynamically populated product cards with 3D hover -->
-            </div>
-          </div>
-
-          <!-- Recent Customer Transactions -->
-          <div class="card grid-col-6 glass-card">
-            <div class="card-header">
-              <div>
-                <h2><i class="fa-solid fa-clock-rotate-left text-purple"></i> Recent Transactions</h2>
-                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Real-time checkout and loyalty logs</p>
-              </div>
-              <button class="btn-link" onclick="navigateTo('transactions')">View All</button>
-            </div>
-            <div class="table-responsive">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Product</th>
-                    <th>Amount</th>
-                    <th>Points</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody id="dashRecentActivityTable">
-                  <!-- Dynamic Rows with customer avatars & highlighted points -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <!-- ADDITIONAL LOYALTY ANALYTICS + QUICK ACTIONS -->
+        <!-- LOYALTY & MEMBERSHIP ANALYTICS + QUICK ACTIONS -->
         <div class="dashboard-grid mb-4">
           <!-- Loyalty Analytics SaaS Card -->
           <div class="card grid-col-8 glass-card">
