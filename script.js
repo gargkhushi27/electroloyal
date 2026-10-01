@@ -239,6 +239,72 @@ function renderDashboard() {
   document.getElementById("barSilver").style.width = ((countS / total) * 100) + "%";
   document.getElementById("barGold").style.width = ((countG / total) * 100) + "%";
   document.getElementById("barDiamond").style.width = ((countD / total) * 100) + "%";
+
+  renderDashboardSalesAndTopProducts(totalSalesAmount, totalPointsCount);
+}
+
+function renderDashboardSalesAndTopProducts(totalSalesAmount, totalPointsCount) {
+  var txnCount = transactions.length;
+  var avgOrder = txnCount > 0 ? Math.round(totalSalesAmount / txnCount) : 0;
+  var avgPoints = txnCount > 0 ? Math.round(totalPointsCount / txnCount) : 0;
+
+  var avgEl = document.getElementById("dashAvgOrderValue");
+  if (avgEl) avgEl.textContent = "\u20b9" + avgOrder.toLocaleString();
+  var countEl = document.getElementById("dashTxnCount");
+  if (countEl) countEl.textContent = txnCount;
+  var avgPtsEl = document.getElementById("dashAvgPoints");
+  if (avgPtsEl) avgPtsEl.textContent = "+" + avgPoints + " pts";
+
+  // Category sales breakdown
+  var catTotals = {};
+  transactions.forEach(function(t) {
+    var prod = products.find(function(p) { return p.id === t.productId; });
+    var cat = prod ? prod.category : "General";
+    catTotals[cat] = (catTotals[cat] || 0) + (t.amount || 0);
+  });
+
+  var catBarsEl = document.getElementById("dashSalesBarsVisual");
+  if (catBarsEl) {
+    catBarsEl.innerHTML = "";
+    var categories = Object.keys(catTotals);
+    if (categories.length === 0) {
+      categories = ["Smartphones", "Earbuds & Headphones", "Smartwatches", "Laptops"];
+      catTotals = { "Smartphones": 45000, "Earbuds & Headphones": 12000, "Smartwatches": 8000, "Laptops": 65000 };
+    }
+    var maxVal = Math.max.apply(null, Object.values(catTotals)) || 1;
+    categories.slice(0, 4).forEach(function(cat) {
+      var val = catTotals[cat] || 0;
+      var pct = Math.min(100, Math.round((val / maxVal) * 100));
+      var row = document.createElement("div");
+      row.className = "sales-bar-row";
+      row.innerHTML = '<div class="sales-bar-header"><span>' + escapeHtml(cat) + '</span><span>\u20b9' + val.toLocaleString() + ' (' + pct + '%)</span></div>' +
+        '<div class="sales-bar-track"><div class="sales-bar-fill" style="width: ' + pct + '%;"></div></div>';
+      catBarsEl.appendChild(row);
+    });
+  }
+
+  // Top Electronics Showcase
+  var topListEl = document.getElementById("dashTopProductsList");
+  if (topListEl) {
+    topListEl.innerHTML = "";
+    var featured = products.slice(0, 4);
+    featured.forEach(function(prod) {
+      var pts = calculatePoints(prod.price);
+      var item = document.createElement("div");
+      item.className = "top-product-item";
+      item.innerHTML = '<div class="top-product-left">' +
+        '<div class="top-product-thumb"><img src="' + prod.image + '" alt="' + escapeHtml(prod.name) + '" onerror="this.src=\'images/products/nova-x1.svg\';"></div>' +
+        '<div class="top-product-meta">' +
+        '<h4 onclick="viewProductDetail(' + prod.id + ')">' + escapeHtml(prod.name) + '</h4>' +
+        '<div class="top-product-sub"><span>' + escapeHtml(prod.category) + '</span> &bull; <span>Stock: ' + prod.stock + '</span></div>' +
+        '</div></div>' +
+        '<div class="top-product-right">' +
+        '<div><div class="top-product-price">\u20b9' + prod.price.toLocaleString() + '</div><div style="font-size:11px;color:#D97706;font-weight:700;">+' + pts + ' pts</div></div>' +
+        '<button class="btn btn-primary btn-sm" onclick="addToCart(' + prod.id + ')" ' + (prod.stock <= 0 ? 'disabled' : '') + ' title="Add to Cart"><i class="fa-solid fa-cart-plus"></i></button>' +
+        '</div>';
+      topListEl.appendChild(item);
+    });
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -1427,12 +1493,150 @@ function escapeHtml(str) {
 }
 
 // --------------------------------------------------------------------------
-// 16. EVENT LISTENERS INITIALIZATION
+// 16. 3D ATMOSPHERIC CANVAS & PARALLAX STAGE (SYLVAHERO INSPIRED)
+// --------------------------------------------------------------------------
+
+function initAtmosphereCanvas() {
+  var canvas = document.getElementById("heroAtmosphereCanvas");
+  if (!canvas) return;
+  var ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  var width, height;
+  function resize() {
+    if (!canvas.parentElement) return;
+    width = canvas.width = canvas.parentElement.offsetWidth || 800;
+    height = canvas.height = canvas.parentElement.offsetHeight || 360;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  var particles = [];
+  var particleCount = 28;
+  for (var i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random() * (width || 800),
+      y: Math.random() * (height || 360),
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: (Math.random() - 0.5) * 0.45,
+      radius: Math.random() * 2 + 1,
+      color: Math.random() > 0.45 ? "rgba(109, 93, 251, " : "rgba(6, 182, 212, ",
+      alpha: Math.random() * 0.5 + 0.2
+    });
+  }
+
+  function draw() {
+    var dashView = document.getElementById("view-dashboard");
+    if (!dashView || !dashView.classList.contains("active")) {
+      requestAnimationFrame(draw);
+      return;
+    }
+    ctx.clearRect(0, 0, width, height);
+
+    // Connecting circuit traces
+    for (var i = 0; i < particles.length; i++) {
+      for (var j = i + 1; j < particles.length; j++) {
+        var dx = particles[i].x - particles[j].x;
+        var dy = particles[i].y - particles[j].y;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 90) {
+          ctx.beginPath();
+          ctx.strokeStyle = "rgba(109, 93, 251, " + (0.16 * (1 - dist / 90)) + ")";
+          ctx.lineWidth = 1;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    // Particles
+    for (var k = 0; k < particles.length; k++) {
+      var p = particles[k];
+      p.x += p.vx;
+      p.y += p.vy;
+
+      if (p.x < 0) p.x = width;
+      if (p.x > width) p.x = 0;
+      if (p.y < 0) p.y = height;
+      if (p.y > height) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = p.color + p.alpha + ")";
+      ctx.fill();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  requestAnimationFrame(draw);
+}
+
+function init3DParallaxStage() {
+  var heroContainer = document.querySelector(".dashboard-3d-hero");
+  var stageScene = document.querySelector(".stage-3d-scene");
+  if (!heroContainer || !stageScene) return;
+
+  var prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReduced) return;
+
+  var currentRotateX = 0;
+  var currentRotateY = 0;
+  var targetRotateX = 0;
+  var targetRotateY = 0;
+
+  heroContainer.addEventListener("mousemove", function(e) {
+    var rect = heroContainer.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    var centerX = rect.width / 2;
+    var centerY = rect.height / 2;
+
+    var normX = (x - centerX) / centerX;
+    var normY = (y - centerY) / centerY;
+
+    targetRotateY = normX * 12;
+    targetRotateX = -normY * 10;
+
+    var layers = stageScene.querySelectorAll(".stage-layer[data-depth]");
+    layers.forEach(function(layer) {
+      var depth = parseFloat(layer.getAttribute("data-depth")) || 0.05;
+      var moveX = normX * (depth * 240);
+      var moveY = normY * (depth * 180);
+      layer.style.transform = "translate3d(" + moveX.toFixed(1) + "px, " + moveY.toFixed(1) + "px, 0)";
+    });
+  });
+
+  heroContainer.addEventListener("mouseleave", function() {
+    targetRotateX = 0;
+    targetRotateY = 0;
+    var layers = stageScene.querySelectorAll(".stage-layer[data-depth]");
+    layers.forEach(function(layer) {
+      layer.style.transform = "translate3d(0, 0, 0)";
+    });
+  });
+
+  function animateTilt() {
+    currentRotateX += (targetRotateX - currentRotateX) * 0.08;
+    currentRotateY += (targetRotateY - currentRotateY) * 0.08;
+
+    stageScene.style.transform = "rotateX(" + currentRotateX.toFixed(2) + "deg) rotateY(" + currentRotateY.toFixed(2) + "deg)";
+    requestAnimationFrame(animateTilt);
+  }
+
+  requestAnimationFrame(animateTilt);
+}
+
+// --------------------------------------------------------------------------
+// 17. EVENT LISTENERS INITIALIZATION
 // --------------------------------------------------------------------------
 
 document.addEventListener("DOMContentLoaded", function() {
   loadData();
   updateCartBadge();
+  initAtmosphereCanvas();
+  init3DParallaxStage();
 
   var navItems = document.querySelectorAll(".nav-item");
   navItems.forEach(function(item) {
