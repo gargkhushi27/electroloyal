@@ -84,115 +84,41 @@
 
       <!-- 1. DASHBOARD VIEW -->
       <section id="view-dashboard" class="page-view active">
-        <!-- 3D HERO / WELCOME AREA -->
-        <div class="dashboard-3d-hero">
-          <canvas id="heroAtmosphereCanvas" class="hero-atmosphere-canvas"></canvas>
-          <div class="hero-ambient-glow glow-purple"></div>
-          <div class="hero-ambient-glow glow-cyan"></div>
-          
-          <div class="hero-grid">
-            <div class="hero-content">
-              <div class="hero-pill-badge">
-                <span class="pulsing-radar-dot"></span>
-                <span>STORE OPERATIONS &bull; LIVE TELEMETRY</span>
-              </div>
-              <h1 class="hero-title">Next-Gen Electronics <span class="gradient-text">Loyalty Ecosystem</span></h1>
-              <p class="hero-desc">Real-time customer intelligence, automated spending-to-tier transitions, and instant loyalty reward distribution powered by high-speed retail transaction tracking.</p>
-              
-              <div class="hero-action-row">
-                <button class="btn btn-primary btn-glow" onclick="openAddPurchaseModal()">
-                  <i class="fa-solid fa-cart-plus"></i> + Record Purchase
-                </button>
-                <button class="btn btn-glass-hero" onclick="openAddCustomerModal()">
-                  <i class="fa-solid fa-user-plus"></i> + Add Customer
-                </button>
-                <button class="btn btn-glass-hero" onclick="navigateTo('products')">
-                  <i class="fa-solid fa-box-open"></i> View Catalogue
-                </button>
-              </div>
-
-              <div class="hero-quick-stats">
-                <div class="hero-quick-stat-item">
-                  <span class="quick-stat-label"><i class="fa-solid fa-bolt text-purple"></i> Points Ratio</span>
-                  <span class="quick-stat-val">10 pts / ₹500</span>
-                </div>
-                <div class="hero-quick-stat-divider"></div>
-                <div class="hero-quick-stat-item">
-                  <span class="quick-stat-label"><i class="fa-solid fa-crown text-gold"></i> Max Tier</span>
-                  <span class="quick-stat-val">Diamond (₹10k+)</span>
-                </div>
-                <div class="hero-quick-stat-divider"></div>
-                <div class="hero-quick-stat-item">
-                  <span class="quick-stat-label"><i class="fa-solid fa-microchip text-cyan"></i> Catalogue</span>
-                  <span class="quick-stat-val">35 Electronics</span>
-                </div>
-              </div>
+        <!-- CLEAN STORE OVERVIEW HERO / WELCOME AREA -->
+        <div class="store-overview-banner">
+          <div class="store-overview-content">
+            <div class="store-badge-pill">
+              <span class="store-status-dot"></span>
+              <span>ELECTRONICS RETAIL MANAGEMENT</span>
             </div>
+            <h1 class="store-overview-title">Store Overview</h1>
+            <p class="store-overview-subtitle">Manage customers, purchases, products and loyalty rewards.</p>
+            
+            <div class="store-overview-actions">
+              <button class="btn btn-primary" onclick="openAddPurchaseModal()">
+                <i class="fa-solid fa-cart-plus"></i> Record Purchase
+              </button>
+              <button class="btn btn-secondary" onclick="openAddCustomerModal()">
+                <i class="fa-solid fa-user-plus"></i> Add Customer
+              </button>
+              <button class="btn btn-secondary" onclick="navigateTo('products')">
+                <i class="fa-solid fa-box-open"></i> View Catalogue
+              </button>
+            </div>
+          </div>
 
-            <!-- 3D INTERACTIVE STAGE -->
-            <div class="hero-stage-container" id="hero3DStage">
-              <div class="stage-3d-scene">
-                <!-- Floating Ambient Background Circuit Rings -->
-                <div class="stage-layer layer-back-circuit">
-                  <div class="glowing-circuit-ring"></div>
-                  <div class="glowing-circuit-lines"></div>
-                </div>
-
-                <!-- Floating Holographic Electronics Card -->
-                <div class="stage-layer layer-device-card" data-depth="0.04">
-                  <div class="hologram-device-card">
-                    <div class="card-glass-specular"></div>
-                    <div class="device-card-header">
-                      <span class="device-tag"><i class="fa-solid fa-microchip"></i> Flagship Showcase</span>
-                      <span class="device-status-dot"></span>
-                    </div>
-                    <div class="device-preview-img-wrap">
-                      <img src="images/products/nova-x1-pro.svg" alt="Nova X1 Pro" class="floating-device-img">
-                    </div>
-                    <div class="device-card-footer">
-                      <div class="device-info">
-                        <h4>Nova X1 Pro</h4>
-                        <span class="device-price">₹34,999</span>
-                      </div>
-                      <span class="device-points-pill"><i class="fa-solid fa-coins"></i> +690 pts</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Floating 3D Loyalty Coin -->
-                <div class="stage-layer layer-loyalty-coin" data-depth="0.08">
-                  <div class="floating-3d-coin">
-                    <div class="coin-front">
-                      <i class="fa-solid fa-coins"></i>
-                      <span>+10</span>
-                      <small>PTS</small>
-                    </div>
-                    <div class="coin-glint"></div>
-                  </div>
-                </div>
-
-                <!-- Floating Holographic Badge 1 -->
-                <div class="stage-layer layer-badge-left" data-depth="0.06">
-                  <div class="floating-tech-chip">
-                    <i class="fa-solid fa-gem text-cyan"></i>
-                    <div>
-                      <strong>Diamond Tier</strong>
-                      <small>VIP Perks Unlocked</small>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Floating Holographic Badge 2 -->
-                <div class="stage-layer layer-badge-right" data-depth="0.05">
-                  <div class="floating-tech-chip">
-                    <i class="fa-solid fa-arrow-trend-up text-success"></i>
-                    <div>
-                      <strong>Instant Upgrade</strong>
-                      <small>Auto Tier Engine</small>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div class="store-overview-quickpills">
+            <div class="quickpill-card">
+              <span class="quickpill-label"><i class="fa-solid fa-coins text-accent"></i> Points Formula</span>
+              <span class="quickpill-val">10 pts / ₹500</span>
+            </div>
+            <div class="quickpill-card">
+              <span class="quickpill-label"><i class="fa-solid fa-crown text-gold"></i> Top Tier</span>
+              <span class="quickpill-val">Diamond (₹10,000+)</span>
+            </div>
+            <div class="quickpill-card">
+              <span class="quickpill-label"><i class="fa-solid fa-layer-group text-accent"></i> Inventory</span>
+              <span class="quickpill-val">35 Electronics</span>
             </div>
           </div>
         </div>
@@ -537,6 +463,21 @@
           <button class="btn btn-primary" id="openAddProductModalBtn">
             <i class="fa-solid fa-plus"></i> Add Product
           </button>
+        </div>
+
+        <!-- Category Filter Chips -->
+        <div class="category-chips-bar" id="categoryChipsBar">
+          <button type="button" class="category-chip active" data-category="All">All</button>
+          <button type="button" class="category-chip" data-category="Smartphones">Smartphones</button>
+          <button type="button" class="category-chip" data-category="Earbuds & Headphones">Headphones & Earbuds</button>
+          <button type="button" class="category-chip" data-category="Smartwatches">Smartwatches</button>
+          <button type="button" class="category-chip" data-category="Speakers">Speakers</button>
+          <button type="button" class="category-chip" data-category="Laptops">Laptops</button>
+          <button type="button" class="category-chip" data-category="Tablets">Tablets</button>
+          <button type="button" class="category-chip" data-category="Keyboards">Keyboards</button>
+          <button type="button" class="category-chip" data-category="Mice">Mice</button>
+          <button type="button" class="category-chip" data-category="Gaming">Gaming</button>
+          <button type="button" class="category-chip" data-category="Accessories">Accessories</button>
         </div>
 
         <!-- Products Grid -->

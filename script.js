@@ -1493,139 +1493,38 @@ function escapeHtml(str) {
 }
 
 // --------------------------------------------------------------------------
-// 16. 3D ATMOSPHERIC CANVAS & PARALLAX STAGE (SYLVAHERO INSPIRED)
+// 16. CATEGORY FILTER CHIPS
 // --------------------------------------------------------------------------
 
-function initAtmosphereCanvas() {
-  var canvas = document.getElementById("heroAtmosphereCanvas");
-  if (!canvas) return;
-  var ctx = canvas.getContext("2d");
-  if (!ctx) return;
+function initCategoryChips() {
+  var chips = document.querySelectorAll(".category-chip");
+  var selectFilter = document.getElementById("productCategoryFilter");
+  if (!chips.length) return;
 
-  var width, height;
-  function resize() {
-    if (!canvas.parentElement) return;
-    width = canvas.width = canvas.parentElement.offsetWidth || 800;
-    height = canvas.height = canvas.parentElement.offsetHeight || 360;
-  }
-  resize();
-  window.addEventListener("resize", resize);
-
-  var particles = [];
-  var particleCount = 28;
-  for (var i = 0; i < particleCount; i++) {
-    particles.push({
-      x: Math.random() * (width || 800),
-      y: Math.random() * (height || 360),
-      vx: (Math.random() - 0.5) * 0.45,
-      vy: (Math.random() - 0.5) * 0.45,
-      radius: Math.random() * 2 + 1,
-      color: Math.random() > 0.45 ? "rgba(109, 93, 251, " : "rgba(6, 182, 212, ",
-      alpha: Math.random() * 0.5 + 0.2
-    });
-  }
-
-  function draw() {
-    var dashView = document.getElementById("view-dashboard");
-    if (!dashView || !dashView.classList.contains("active")) {
-      requestAnimationFrame(draw);
-      return;
-    }
-    ctx.clearRect(0, 0, width, height);
-
-    // Connecting circuit traces
-    for (var i = 0; i < particles.length; i++) {
-      for (var j = i + 1; j < particles.length; j++) {
-        var dx = particles[i].x - particles[j].x;
-        var dy = particles[i].y - particles[j].y;
-        var dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 90) {
-          ctx.beginPath();
-          ctx.strokeStyle = "rgba(109, 93, 251, " + (0.16 * (1 - dist / 90)) + ")";
-          ctx.lineWidth = 1;
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.stroke();
-        }
+  chips.forEach(function(chip) {
+    chip.addEventListener("click", function() {
+      chips.forEach(function(c) { c.classList.remove("active"); });
+      chip.classList.add("active");
+      var cat = chip.getAttribute("data-category") || "All";
+      if (selectFilter) {
+        selectFilter.value = cat;
       }
-    }
-
-    // Particles
-    for (var k = 0; k < particles.length; k++) {
-      var p = particles[k];
-      p.x += p.vx;
-      p.y += p.vy;
-
-      if (p.x < 0) p.x = width;
-      if (p.x > width) p.x = 0;
-      if (p.y < 0) p.y = height;
-      if (p.y > height) p.y = 0;
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = p.color + p.alpha + ")";
-      ctx.fill();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  requestAnimationFrame(draw);
-}
-
-function init3DParallaxStage() {
-  var heroContainer = document.querySelector(".dashboard-3d-hero");
-  var stageScene = document.querySelector(".stage-3d-scene");
-  if (!heroContainer || !stageScene) return;
-
-  var prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReduced) return;
-
-  var currentRotateX = 0;
-  var currentRotateY = 0;
-  var targetRotateX = 0;
-  var targetRotateY = 0;
-
-  heroContainer.addEventListener("mousemove", function(e) {
-    var rect = heroContainer.getBoundingClientRect();
-    var x = e.clientX - rect.left;
-    var y = e.clientY - rect.top;
-    var centerX = rect.width / 2;
-    var centerY = rect.height / 2;
-
-    var normX = (x - centerX) / centerX;
-    var normY = (y - centerY) / centerY;
-
-    targetRotateY = normX * 12;
-    targetRotateX = -normY * 10;
-
-    var layers = stageScene.querySelectorAll(".stage-layer[data-depth]");
-    layers.forEach(function(layer) {
-      var depth = parseFloat(layer.getAttribute("data-depth")) || 0.05;
-      var moveX = normX * (depth * 240);
-      var moveY = normY * (depth * 180);
-      layer.style.transform = "translate3d(" + moveX.toFixed(1) + "px, " + moveY.toFixed(1) + "px, 0)";
+      renderProductsGrid();
     });
   });
 
-  heroContainer.addEventListener("mouseleave", function() {
-    targetRotateX = 0;
-    targetRotateY = 0;
-    var layers = stageScene.querySelectorAll(".stage-layer[data-depth]");
-    layers.forEach(function(layer) {
-      layer.style.transform = "translate3d(0, 0, 0)";
+  if (selectFilter) {
+    selectFilter.addEventListener("change", function() {
+      var currentVal = selectFilter.value;
+      chips.forEach(function(c) {
+        if (c.getAttribute("data-category") === currentVal) {
+          c.classList.add("active");
+        } else {
+          c.classList.remove("active");
+        }
+      });
     });
-  });
-
-  function animateTilt() {
-    currentRotateX += (targetRotateX - currentRotateX) * 0.08;
-    currentRotateY += (targetRotateY - currentRotateY) * 0.08;
-
-    stageScene.style.transform = "rotateX(" + currentRotateX.toFixed(2) + "deg) rotateY(" + currentRotateY.toFixed(2) + "deg)";
-    requestAnimationFrame(animateTilt);
   }
-
-  requestAnimationFrame(animateTilt);
 }
 
 // --------------------------------------------------------------------------
@@ -1635,8 +1534,7 @@ function init3DParallaxStage() {
 document.addEventListener("DOMContentLoaded", function() {
   loadData();
   updateCartBadge();
-  initAtmosphereCanvas();
-  init3DParallaxStage();
+  initCategoryChips();
 
   var navItems = document.querySelectorAll(".nav-item");
   navItems.forEach(function(item) {
