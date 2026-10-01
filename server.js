@@ -177,6 +177,7 @@ const server = http.createServer(async (req, res) => {
           products,
           transactions,
           stats,
+          analytics: db.getAnalytics(),
           loyaltyConfig: db.getLoyaltyConfig()
         });
       }
@@ -302,6 +303,12 @@ const server = http.createServer(async (req, res) => {
       if (pathname === '/api/stats' && method === 'GET') {
         const stats = db.getStats();
         return sendJson(res, 200, { success: true, stats });
+      }
+
+      // 9.1 Dedicated Analytics API
+      if (pathname === '/api/analytics' && method === 'GET') {
+        const analytics = db.getAnalytics();
+        return sendJson(res, 200, { success: true, analytics });
       }
 
       // 10. Loyalty Settings API

@@ -91,20 +91,24 @@ function listenSSE(onEvent) {
 async function runTests() {
   console.log('--- STARTING GADGET GRID CENTRAL STORAGE TEST SUITE ---');
 
-  // 1. Reset database to clean demo state
-  console.log('\n[Test 1] Reset database to standard state...');
+  // Snapshot initial clean production product state
+  const productSnapshot = db.getProducts().map(p => ({ id: p.id, stock: p.stock }));
+
+  // 1. Reset database to clean production state
+  console.log('\n[Test 1] Reset database to clean state...');
   const resetRes = await request({ path: '/api/reset', method: 'POST' });
   assert.strictEqual(resetRes.status, 200);
   assert.strictEqual(resetRes.body.success, true);
   console.log('✓ Database reset successfully via /api/reset');
 
-  // 2. Initial state verification
+  // 2. Initial state verification (0 customers, 0 transactions, products preserved)
   console.log('\n[Test 2] Verify /api/data state...');
   const dataRes = await request({ path: '/api/data', method: 'GET' });
   assert.strictEqual(dataRes.status, 200);
-  assert.strictEqual(dataRes.body.products.length, 35, 'Should have 35 default products');
-  assert.strictEqual(dataRes.body.customers.length, 4, 'Should have 4 initial customers');
-  console.log('✓ Initial state confirmed: 35 products, 4 customers, 5 transactions');
+  assert.strictEqual(dataRes.body.products.length, 35, 'Should have 35 preserved products');
+  assert.strictEqual(dataRes.body.customers.length, 0, 'Should have 0 initial customers');
+  assert.strictEqual(dataRes.body.transactions.length, 0, 'Should have 0 initial transactions');
+  console.log('✓ Initial clean state confirmed: 35 products, 0 customers, 0 transactions');
 
   // 3. Connect simulated Client B via SSE (/api/events)
   console.log('\n[Test 3] Connect simulated Client B via SSE (/api/events)...');
@@ -138,6 +142,10 @@ async function runTests() {
 
   // 5. Concurrency Race Condition Safety (Two cashiers buying limited stock)
   console.log('\n[Test 5] High-Concurrency Race Condition Safety (Simultaneous checkouts)...');
+  db.db.prepare("UPDATE products SET stock = 5 WHERE id = 17").run();
+  db.db.prepare("UPDATE products SET stock = 10 WHERE id = 16").run();
+  db.db.prepare("UPDATE products SET stock = 40 WHERE id = 31").run();
+  db.db.prepare("UPDATE products SET stock = 35 WHERE id = 32").run();
   const prod17Before = db.getProductById(17); // NovaBook 16 Pro (stock 5)
   console.log(`Product 17 initial stock: ${prod17Before.stock}`);
   assert.strictEqual(prod17Before.stock, 5);
@@ -224,13 +232,22 @@ async function runTests() {
   assert.strictEqual(duplicateRedeemRes.status, 400);
   console.log('✓ Duplicate reward redemption prevented');
 
-  // 10. Dashboard Stats Telemetry
-  console.log('\n[Test 9] Verify /api/stats telemetry...');
+  // 10. Dashboard Stats & Analytics Telemetry
+  console.log('\n[Test 9] Verify /api/stats and /api/analytics telemetry...');
   const statsRes = await request({ path: '/api/stats', method: 'GET' });
   assert.strictEqual(statsRes.status, 200);
-  assert(statsRes.body.stats.totalCustomers >= 5);
+  assert(statsRes.body.stats.totalCustomers >= 1);
   assert(statsRes.body.stats.totalSales > 0);
-  console.log('✓ Dashboard stats matches central database aggregation');
+
+  const analyticsRes = await request({ path: '/api/analytics', method: 'GET' });
+  assert.strictEqual(analyticsRes.status, 200);
+  assert.strictEqual(analyticsRes.body.analytics.activeMembers, statsRes.body.stats.totalCustomers);
+  assert.strictEqual(analyticsRes.body.analytics.totalRevenue, statsRes.body.stats.totalSales);
+  assert.strictEqual(analyticsRes.body.analytics.totalPointsIssued, statsRes.body.stats.totalPointsIssued);
+  assert.strictEqual(analyticsRes.body.analytics.completedTransactions, statsRes.body.stats.transactionsCount);
+  assert(Array.isArray(analyticsRes.body.analytics.monthlySales));
+  assert(analyticsRes.body.analytics.velocity);
+  console.log('✓ Dashboard stats and central analytics telemetry match central database aggregation');
 
   // 11. Customer Loyalty Reward Redemption Flow: First Purchase (Earn points, no discount on same purchase)
   console.log('\n[Test 10] Loyalty Flow: First Purchase earns points, no discount on 1st purchase...');
@@ -473,7 +490,7 @@ async function runTests() {
 
   // Check transactions remain intact
   const allTxns = db.getTransactions();
-  assert(allTxns.length >= 8, 'All historical transactions must remain intact');
+  assert(allTxns.length >= 5, 'All historical transactions must remain intact');
   console.log('✓ Data safety verified: Unselected products, customers, points, and transaction history fully intact');
 
   // 21. Verify default Point Earning Ratio (₹500 = 10 pts)
@@ -561,6 +578,28 @@ async function runTests() {
 
   // Clean up
   sseClient.req.destroy();
+
+  // Restore clean production state
+  console.log('\n[Post-Test Verification] Restoring and verifying clean production state...');
+  db.resetDatabase();
+  productSnapshot.forEach(p => {
+    db.db.prepare('UPDATE products SET stock = ? WHERE id = ?').run(p.stock, p.id);
+  });
+
+  const finalCustCount = db.getCustomers().length;
+  const finalTxnCount = db.getTransactions().length;
+  const finalTxnItemsCount = db.db.prepare('SELECT COUNT(*) as c FROM transaction_items').get().c;
+  const finalProds = db.getProducts();
+
+  assert.strictEqual(finalCustCount, 0, 'Production database must have 0 customers');
+  assert.strictEqual(finalTxnCount, 0, 'Production database must have 0 transactions');
+  assert.strictEqual(finalTxnItemsCount, 0, 'Production database must have 0 transaction items');
+  assert.strictEqual(finalProds.length, 35, 'Production database must have 35 products');
+  for (let i = 0; i < productSnapshot.length; i++) {
+    const curr = db.getProductById(productSnapshot[i].id);
+    assert.strictEqual(curr.stock, productSnapshot[i].stock, `Product ${curr.id} stock must remain unchanged`);
+  }
+  console.log('✓ Clean production database state verified: 0 customers, 0 transactions, 35 products with unchanged stock');
 
   console.log('\n================================================================');
   console.log('ALL 24 CENTRAL STORAGE, LOYALTY, RATIO & PRODUCT TESTS PASSED! ✓');

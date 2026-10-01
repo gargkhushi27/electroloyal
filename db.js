@@ -214,69 +214,6 @@ function seedInitialData() {
     });
   }
 
-  const custCount = db.prepare('SELECT COUNT(*) as count FROM customers').get().count;
-  if (custCount === 0) {
-    const INITIAL_CUSTOMERS = [
-      { id: "ELC-000001", name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "9876543210", dob: "1994-06-12", membership: "Bronze", totalSpending: 7498, points: 140, purchasesCount: 2, createdAt: "2026-08-15" },
-      { id: "ELC-000002", name: "Priya Patel", email: "priya.patel@example.com", phone: "9812345678", dob: "1998-11-20", membership: "Silver", totalSpending: 34999, points: 690, purchasesCount: 1, createdAt: "2026-09-01" },
-      { id: "ELC-000003", name: "Rohan Verma", email: "rohan.v@example.com", phone: "9988776655", dob: "2000-02-05", membership: "Bronze", totalSpending: 1499, points: 20, purchasesCount: 1, createdAt: "2026-09-10" },
-      { id: "ELC-000004", name: "Ananya Roy", email: "ananya.roy@example.com", phone: "9765432109", dob: "1992-09-30", membership: "Bronze", totalSpending: 3999, points: 70, purchasesCount: 1, createdAt: "2026-09-18" }
-    ];
-
-    const insertCust = db.prepare(`
-      INSERT INTO customers (id, name, email, phone, dob, membership, totalSpending, points, purchasesCount, redeemedRewards, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    INITIAL_CUSTOMERS.forEach(c => {
-      insertCust.run(
-        c.id,
-        c.name,
-        c.email,
-        c.phone,
-        c.dob,
-        c.membership,
-        c.totalSpending,
-        c.points,
-        c.purchasesCount,
-        '[]',
-        c.createdAt
-      );
-    });
-  }
-
-  const txnCount = db.prepare('SELECT COUNT(*) as count FROM transactions').get().count;
-  if (txnCount === 0) {
-    const INITIAL_TRANSACTIONS = [
-      { transactionId: "TXN-000001", customerId: "ELC-000001", customerName: "Aarav Sharma", productId: 7, productName: "AirBeat Max", quantity: 1, amount: 4999, paymentMethod: "Online", points: 90, date: "2026-09-05", rewardActivity: "Silver Offer Unlocked" },
-      { transactionId: "TXN-000002", customerId: "ELC-000001", customerName: "Aarav Sharma", productId: 33, productName: "PowerBank 20K", quantity: 1, amount: 2499, paymentMethod: "Cash", points: 40, date: "2026-09-15", rewardActivity: "Gold Tier Reached" },
-      { transactionId: "TXN-000003", customerId: "ELC-000002", customerName: "Priya Patel", productId: 2, productName: "Nova X1 Pro", quantity: 1, amount: 34999, paymentMethod: "Online", points: 690, date: "2026-09-20", rewardActivity: "Diamond Tier Reached" },
-      { transactionId: "TXN-000004", customerId: "ELC-000003", customerName: "Rohan Verma", productId: 5, productName: "SoundPods Lite", quantity: 1, amount: 1499, paymentMethod: "Cash", points: 20, date: "2026-09-22", rewardActivity: "Bronze Birthday Reward" },
-      { transactionId: "TXN-000005", customerId: "ELC-000004", customerName: "Ananya Roy", productId: 13, productName: "Boom 360", quantity: 1, amount: 3999, paymentMethod: "Online", points: 70, date: "2026-09-25", rewardActivity: "Silver Offer Unlocked" }
-    ];
-
-    const insertTxn = db.prepare(`
-      INSERT INTO transactions (transactionId, customerId, customerName, productId, productName, quantity, amount, paymentMethod, points, date, rewardActivity, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    INITIAL_TRANSACTIONS.forEach(t => {
-      insertTxn.run(
-        t.transactionId,
-        t.customerId,
-        t.customerName,
-        t.productId,
-        t.productName,
-        t.quantity,
-        t.amount,
-        t.paymentMethod,
-        t.points,
-        t.date,
-        t.rewardActivity,
-        t.date + 'T12:00:00.000Z'
-      );
-    });
-  }
 }
 
 function resetDatabase() {
@@ -285,11 +222,9 @@ function resetDatabase() {
     db.exec('DELETE FROM transaction_items');
     db.exec('DELETE FROM transactions');
     db.exec('DELETE FROM customers');
-    db.exec('DELETE FROM products');
     db.prepare("INSERT INTO settings (key, value) VALUES ('loyalty_ratio', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(
       JSON.stringify({ spendingAmount: 500, pointsEarned: 10 })
     );
-    seedInitialData();
     db.exec('COMMIT');
     return { success: true };
   } catch (err) {
@@ -860,17 +795,84 @@ function getTransactions(searchQuery = "") {
 
 function getStats() {
   const custCount = db.prepare("SELECT COUNT(*) as count FROM customers").get().count;
-  const totalPoints = db.prepare("SELECT SUM(points) as sum FROM customers").get().sum || 0;
-  const totalSales = db.prepare("SELECT SUM(amount) as sum FROM transactions").get().sum || 0;
+  const totalPoints = db.prepare("SELECT COALESCE(SUM(points), 0) as sum FROM transactions").get().sum;
+  const totalSales = db.prepare("SELECT COALESCE(SUM(COALESCE(finalAmount, amount)), 0) as sum FROM transactions").get().sum;
   const diamondCount = db.prepare("SELECT COUNT(*) as count FROM customers WHERE membership = 'Diamond'").get().count;
   const txnCount = db.prepare("SELECT COUNT(*) as count FROM transactions").get().count;
+  const avgRevenuePerCustomer = custCount > 0 ? Math.round(totalSales / custCount) : 0;
+  const avgPointsPerPurchase = txnCount > 0 ? (Math.round((totalPoints / txnCount) * 10) / 10) : 0;
 
   return {
     totalCustomers: custCount,
     totalPointsIssued: totalPoints,
     totalSales: totalSales,
     diamondMembers: diamondCount,
-    transactionsCount: txnCount
+    transactionsCount: txnCount,
+    avgRevenuePerCustomer: avgRevenuePerCustomer,
+    avgPointsPerPurchase: avgPointsPerPurchase
+  };
+}
+
+function getAnalytics() {
+  const custCount = db.prepare("SELECT COUNT(*) as count FROM customers").get().count;
+  const totalRevenue = db.prepare("SELECT COALESCE(SUM(COALESCE(finalAmount, amount)), 0) as sum FROM transactions").get().sum;
+  const totalPointsIssued = db.prepare("SELECT COALESCE(SUM(points), 0) as sum FROM transactions").get().sum;
+  const txnCount = db.prepare("SELECT COUNT(*) as count FROM transactions").get().count;
+  const avgRevenuePerCustomer = custCount > 0 ? Math.round(totalRevenue / custCount) : 0;
+  const avgPointsPerPurchase = txnCount > 0 ? (Math.round((totalPointsIssued / txnCount) * 10) / 10) : 0;
+
+  const tierCounts = { Bronze: 0, Silver: 0, Gold: 0, Diamond: 0 };
+  const tierRows = db.prepare("SELECT membership, COUNT(*) as count FROM customers GROUP BY membership").all();
+  tierRows.forEach(r => {
+    if (tierCounts[r.membership] !== undefined) {
+      tierCounts[r.membership] = r.count;
+    }
+  });
+
+  const mNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const now = new Date();
+  const monthlySales = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = mNames[d.getMonth()];
+    const yearMonthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const row = db.prepare("SELECT COALESCE(SUM(COALESCE(finalAmount, amount)), 0) as total FROM transactions WHERE date LIKE ?").get(`${yearMonthStr}%`);
+    monthlySales.push({
+      month: key,
+      yearMonth: yearMonthStr,
+      amount: row ? row.total : 0
+    });
+  }
+
+  const curYearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const curMonthStats = db.prepare(`
+    SELECT
+      COUNT(*) as count,
+      COALESCE(SUM(COALESCE(finalAmount, amount)), 0) as revenue,
+      COALESCE(SUM(points), 0) as points
+    FROM transactions
+    WHERE date LIKE ?
+  `).get(`${curYearMonth}%`);
+
+  const velocity = {
+    currentMonthTransactions: curMonthStats ? curMonthStats.count : 0,
+    currentMonthRevenue: curMonthStats ? curMonthStats.revenue : 0,
+    currentMonthPoints: curMonthStats ? curMonthStats.points : 0,
+    completedTransactions: txnCount,
+    avgPointsPerPurchase: avgPointsPerPurchase,
+    avgOrderValue: txnCount > 0 ? Math.round(totalRevenue / txnCount) : 0
+  };
+
+  return {
+    totalRevenue,
+    totalPointsIssued,
+    activeMembers: custCount,
+    avgRevenuePerCustomer,
+    avgPointsPerPurchase,
+    completedTransactions: txnCount,
+    tierCounts,
+    monthlySales,
+    velocity
   };
 }
 
@@ -897,6 +899,7 @@ module.exports = {
   calculateRewardDiscount,
   redeemReward,
   getStats,
+  getAnalytics,
   calculatePoints,
   calculateMembership,
   getUnlockedRewards,

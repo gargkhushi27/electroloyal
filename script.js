@@ -51,20 +51,8 @@ const DEFAULT_PRODUCTS = [
   { id: 35, name: "Wireless Charging Pad", category: "Accessories", price: 1499, image: "images/products/wireless-charging-pad.svg", stock: 25, description: "Fast 15W Qi wireless charging pad with non-slip rubber surface.", specifications: ["15W Qi Fast Charge", "LED Charging Indicator", "Foreign Object Detection"], eligibleMembership: "Bronze", membershipOffer: "Basic offer" }
 ];
 
-const INITIAL_CUSTOMERS = [
-  { id: "ELC-000001", name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "9876543210", dob: "1994-06-12", membership: "Bronze", totalSpending: 7498, points: 140, purchasesCount: 2, createdAt: "2026-08-15" },
-  { id: "ELC-000002", name: "Priya Patel", email: "priya.patel@example.com", phone: "9812345678", dob: "1998-11-20", membership: "Silver", totalSpending: 34999, points: 690, purchasesCount: 1, createdAt: "2026-09-01" },
-  { id: "ELC-000003", name: "Rohan Verma", email: "rohan.v@example.com", phone: "9988776655", dob: "2000-02-05", membership: "Bronze", totalSpending: 1499, points: 20, purchasesCount: 1, createdAt: "2026-09-10" },
-  { id: "ELC-000004", name: "Ananya Roy", email: "ananya.roy@example.com", phone: "9765432109", dob: "1992-09-30", membership: "Bronze", totalSpending: 3999, points: 70, purchasesCount: 1, createdAt: "2026-09-18" }
-];
-
-const INITIAL_TRANSACTIONS = [
-  { transactionId: "TXN-000001", customerId: "ELC-000001", customerName: "Aarav Sharma", productId: 7, productName: "AirBeat Max", quantity: 1, amount: 4999, paymentMethod: "Online", points: 90, date: "2026-09-05", rewardActivity: "Silver Offer Unlocked" },
-  { transactionId: "TXN-000002", customerId: "ELC-000001", customerName: "Aarav Sharma", productId: 33, productName: "PowerBank 20K", quantity: 1, amount: 2499, paymentMethod: "Cash", points: 40, date: "2026-09-15", rewardActivity: "Gold Tier Reached" },
-  { transactionId: "TXN-000003", customerId: "ELC-000002", customerName: "Priya Patel", productId: 2, productName: "Nova X1 Pro", quantity: 1, amount: 34999, paymentMethod: "Online", points: 690, date: "2026-09-20", rewardActivity: "Diamond Tier Reached" },
-  { transactionId: "TXN-000004", customerId: "ELC-000003", customerName: "Rohan Verma", productId: 5, productName: "SoundPods Lite", quantity: 1, amount: 1499, paymentMethod: "Cash", points: 20, date: "2026-09-22", rewardActivity: "Bronze Birthday Reward" },
-  { transactionId: "TXN-000005", customerId: "ELC-000004", customerName: "Ananya Roy", productId: 13, productName: "Boom 360", quantity: 1, amount: 3999, paymentMethod: "Online", points: 70, date: "2026-09-25", rewardActivity: "Silver Offer Unlocked" }
-];
+const INITIAL_CUSTOMERS = [];
+const INITIAL_TRANSACTIONS = [];
 
 let customers = [];
 let products = [];
@@ -144,6 +132,7 @@ function renderActiveView() {
   else if (pageId === "customer-profile" && currentSelectedCustomerId) viewCustomerProfile(currentSelectedCustomerId);
   else if (pageId === "rewards") renderRewardsPage();
   else if (pageId === "transactions") renderTransactionsTable();
+  else if (pageId === "analytics") renderAnalyticsView();
   else renderDashboard();
 
   // Keep dashboard KPI counts updated in memory/background
@@ -225,6 +214,7 @@ function initRealTimeSync() {
     sseConnection.addEventListener('PRODUCT_CREATED', function() { syncFromServer(); });
     sseConnection.addEventListener('PRODUCT_UPDATED', function() { syncFromServer(); });
     sseConnection.addEventListener('PRODUCT_DELETED', function() { syncFromServer(); });
+    sseConnection.addEventListener('PRODUCTS_DELETED', function() { syncFromServer(); });
     sseConnection.addEventListener('REWARD_REDEEMED', function() { syncFromServer(); });
     sseConnection.addEventListener('DATA_RESET', function() { syncFromServer(); });
     sseConnection.addEventListener('LOYALTY_CONFIG_UPDATED', function(e) {
@@ -409,10 +399,12 @@ function navigateTo(pageId) {
 
 function renderDashboard() {
   var totalCustomersCount = customers.length;
-  var totalPointsCount = 0;
-  for (var i = 0; i < customers.length; i++) { totalPointsCount += (customers[i].points || 0); }
+  var totalPointsIssued = 0;
   var totalSalesAmount = 0;
-  for (var i = 0; i < transactions.length; i++) { totalSalesAmount += (transactions[i].amount || 0); }
+  for (var i = 0; i < transactions.length; i++) {
+    totalSalesAmount += ((transactions[i].finalAmount != null ? transactions[i].finalAmount : transactions[i].amount) || 0);
+    totalPointsIssued += (transactions[i].points || 0);
+  }
   var activeRewardsCount = 0;
   for (var i = 0; i < customers.length; i++) { activeRewardsCount += getUnlockedRewards(customers[i]).length; }
 
@@ -420,7 +412,7 @@ function renderDashboard() {
   var elCust = document.getElementById("dashTotalCustomers");
   if (elCust) elCust.textContent = totalCustomersCount;
   var elPts = document.getElementById("dashTotalPoints");
-  if (elPts) elPts.textContent = totalPointsCount.toLocaleString();
+  if (elPts) elPts.textContent = totalPointsIssued.toLocaleString();
   var elSales = document.getElementById("dashTotalSales");
   if (elSales) elSales.textContent = "\u20b9" + totalSalesAmount.toLocaleString();
 
@@ -471,7 +463,7 @@ function renderDashboard() {
   }
 
   // 7. Render Metrics Strip & Category Sales Distribution
-  renderDashboardSalesAndTopProducts(totalSalesAmount, totalPointsCount);
+  renderDashboardSalesAndTopProducts(totalSalesAmount, totalPointsIssued);
 }
 
 function renderDonutChart(countB, countS, countG, countD, totalCustomers) {
@@ -542,31 +534,36 @@ function renderSalesTrendSvg() {
   var monthLabelsRow = document.getElementById("salesMonthLabelsRow");
   if (!svgEl) return;
 
-  // Aggregate sales by month from transactions
-  var monthlyMap = { "May": 18500, "Jun": 24200, "Jul": 31000, "Aug": 42000, "Sep": 0, "Oct": 0 };
-  var monthKeys = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"];
+  // Aggregate sales by month from transactions (dynamic rolling 6 months ending in current month)
+  var mNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var now = new Date();
+  var monthKeys = [];
+  var monthlyMap = {};
 
-  // Add recorded transactions to current months
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    var key = mNames[d.getMonth()];
+    monthKeys.push(key);
+    monthlyMap[key] = 0;
+  }
+
+  // Calculate actual sales per month from completed transactions
   transactions.forEach(function(t) {
+    var amt = (t.finalAmount != null ? t.finalAmount : t.amount) || 0;
     if (t.date) {
-      var d = new Date(t.date);
-      if (!isNaN(d.getTime())) {
-        var mNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        var mName = mNames[d.getMonth()];
+      var td = new Date(t.date);
+      if (!isNaN(td.getTime())) {
+        var mName = mNames[td.getMonth()];
         if (monthlyMap[mName] !== undefined) {
-          monthlyMap[mName] += (t.amount || 0);
-        } else {
-          monthlyMap["Sep"] += (t.amount || 0);
+          monthlyMap[mName] += amt;
         }
-      } else {
-        monthlyMap["Sep"] += (t.amount || 0);
       }
     }
   });
 
   var values = monthKeys.map(function(k) { return monthlyMap[k]; });
-  var maxVal = Math.max.apply(null, values) || 50000;
-  if (maxVal < 50000) maxVal = 50000;
+  var maxVal = Math.max.apply(null, values) || 0;
+  var displayMax = maxVal > 0 ? maxVal : 50000;
 
   var width = 600;
   var height = 180;
@@ -577,7 +574,7 @@ function renderSalesTrendSvg() {
   var points = [];
   for (var i = 0; i < values.length; i++) {
     var x = padX + i * stepX;
-    var norm = values[i] / maxVal;
+    var norm = displayMax > 0 ? (values[i] / displayMax) : 0;
     var y = height - padY - (norm * (height - padY * 2));
     points.push({ x: x, y: y, val: values[i] });
   }
@@ -601,23 +598,30 @@ function renderSalesTrendSvg() {
     '<line x1="' + padX + '" y1="' + (height - padY) + '" x2="' + (width - padX) + '" y2="' + (height - padY) + '" stroke="#FCE7F3" stroke-width="1"/>';
 
   // Render Coral/Pink Bars for each month
-  points.forEach(function(pt, idx) {
-    var barHeight = Math.max(12, (height - padY) - pt.y);
-    var barX = pt.x - barWidth / 2;
-    var barY = (height - padY) - barHeight;
-    svgHtml += '<rect x="' + barX + '" y="' + barY + '" width="' + barWidth + '" height="' + barHeight + '" rx="8" fill="url(#salesBarGrad)"/>';
-    svgHtml += '<text x="' + pt.x + '" y="' + (barY - 8) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#171717">\u20b9' + Math.round(pt.val / 1000) + 'k</text>';
+  points.forEach(function(pt) {
+    if (pt.val > 0) {
+      var barHeight = Math.max(12, (height - padY) - pt.y);
+      var barX = pt.x - barWidth / 2;
+      var barY = (height - padY) - barHeight;
+      svgHtml += '<rect x="' + barX + '" y="' + barY + '" width="' + barWidth + '" height="' + barHeight + '" rx="8" fill="url(#salesBarGrad)"/>';
+      var valLabel = pt.val >= 1000 ? ('\u20b9' + Math.round(pt.val / 1000) + 'k') : ('\u20b9' + pt.val);
+      svgHtml += '<text x="' + pt.x + '" y="' + (barY - 8) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#171717">' + valLabel + '</text>';
+    } else {
+      svgHtml += '<text x="' + pt.x + '" y="' + (height - padY - 8) + '" text-anchor="middle" font-size="11" font-weight="600" fill="#9CA3AF">\u20b90</text>';
+    }
   });
 
   // Render Coral Overlay Trend Line
-  var trendLinePath = "M " + points[0].x + " " + points[0].y;
-  for (var i = 1; i < points.length; i++) {
-    var prev = points[i - 1];
-    var curr = points[i];
-    var cx = (prev.x + curr.x) / 2;
-    trendLinePath += " C " + cx + " " + prev.y + ", " + cx + " " + curr.y + ", " + curr.x + " " + curr.y;
+  if (points.length > 0) {
+    var trendLinePath = "M " + points[0].x + " " + points[0].y;
+    for (var i = 1; i < points.length; i++) {
+      var prev = points[i - 1];
+      var curr = points[i];
+      var cx = (prev.x + curr.x) / 2;
+      trendLinePath += " C " + cx + " " + prev.y + ", " + cx + " " + curr.y + ", " + curr.x + " " + curr.y;
+    }
+    svgHtml += '<path d="' + trendLinePath + '" fill="none" stroke="#F56F6A" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>';
   }
-  svgHtml += '<path d="' + trendLinePath + '" fill="none" stroke="#F56F6A" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 3"/>';
 
   svgEl.innerHTML = svgHtml;
 
@@ -663,7 +667,7 @@ function renderTopSellingProducts() {
         '<img src="' + prod.image + '" alt="' + escapeHtml(prod.name) + '" onerror="this.src=\'images/products/nova-x1.svg\';">' +
       '</div>' +
       '<h4 class="top-card-title" onclick="viewProductDetail(' + prod.id + ')">' + escapeHtml(prod.name) + '</h4>' +
-      '<div class="top-card-cat">Stock: ' + prod.stock + ' &bull; ' + (salesMap[prod.id] || 1) + ' Sold</div>' +
+      '<div class="top-card-cat">Stock: ' + prod.stock + ' &bull; ' + (salesMap[prod.id] || 0) + ' Sold</div>' +
       '<div class="top-card-footer">' +
         '<div>' +
           '<div class="top-card-price">\u20b9' + prod.price.toLocaleString() + '</div>' +
@@ -702,8 +706,8 @@ function renderDashboardSalesAndTopProducts(totalSalesAmount, totalPointsCount) 
     catBarsEl.innerHTML = "";
     var categories = Object.keys(catTotals);
     if (categories.length === 0) {
-      categories = ["Smartphones", "Earbuds & Headphones", "Smartwatches", "Laptops"];
-      catTotals = { "Smartphones": 45000, "Earbuds & Headphones": 12000, "Smartwatches": 8000, "Laptops": 65000 };
+      catBarsEl.innerHTML = '<div style="text-align:center; padding:24px 0; color:var(--text-muted); font-size:13px;"><i class="fa-solid fa-chart-simple" style="margin-right:6px;"></i>No category sales recorded yet</div>';
+      return;
     }
     var maxVal = Math.max.apply(null, Object.values(catTotals)) || 1;
     categories.slice(0, 4).forEach(function(cat) {
@@ -723,17 +727,35 @@ function renderDashboardSalesAndTopProducts(totalSalesAmount, totalPointsCount) 
 // --------------------------------------------------------------------------
 
 function renderAnalyticsView() {
+  renderAnalyticsContent();
+  if (typeof fetch === "function") {
+    fetch(API_BASE + '/api/analytics', { cache: 'no-cache' })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.success && data.analytics) {
+          applyServerAnalytics(data.analytics);
+        }
+      })
+      .catch(function() {});
+  }
+}
+
+function renderAnalyticsContent() {
   var grid = document.getElementById("analyticsSummaryGrid");
   if (!grid) return;
 
   var totalCust = customers.length;
   var totalRev = 0;
   var totalPts = 0;
+  var completedTxns = transactions.length;
+
   transactions.forEach(function(t) {
-    totalRev += (t.amount || 0);
+    totalRev += ((t.finalAmount != null ? t.finalAmount : t.amount) || 0);
     totalPts += (t.points || 0);
   });
   var avgSpent = totalCust > 0 ? Math.round(totalRev / totalCust) : 0;
+  var avgPtsPerPurch = completedTxns > 0 ? (Math.round((totalPts / completedTxns) * 10) / 10) : 0;
+  var avgOrderValue = completedTxns > 0 ? Math.round(totalRev / completedTxns) : 0;
 
   grid.innerHTML = '' +
     '<div class="analytics-stat-card">' +
@@ -759,11 +781,33 @@ function renderAnalyticsView() {
 
   var trendsBox = document.getElementById("analyticsDetailedTrends");
   if (trendsBox) {
+    var now = new Date();
+    var curYear = now.getFullYear();
+    var curMonth = now.getMonth();
+    var curMonthCount = 0;
+    var curMonthRev = 0;
+    var curMonthPts = 0;
+
+    transactions.forEach(function(t) {
+      if (t.date) {
+        var d = new Date(t.date);
+        if (!isNaN(d.getTime()) && d.getFullYear() === curYear && d.getMonth() === curMonth) {
+          curMonthCount++;
+          curMonthRev += ((t.finalAmount != null ? t.finalAmount : t.amount) || 0);
+          curMonthPts += (t.points || 0);
+        }
+      }
+    });
+
     trendsBox.innerHTML = '' +
       '<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Monthly velocity computed from ledger records:</p>' +
-      '<div style="background:#F8FAFC;padding:16px;border-radius:var(--radius-md);border:1px solid var(--border-color);">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;font-weight:700;"><span>Current Month Transactions</span><span>' + transactions.length + ' checkouts</span></div>' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;font-weight:700;"><span>Total Points Minted</span><span class="text-gold">+' + totalPts + ' pts</span></div>' +
+      '<div style="background:#F8FAFC;padding:16px;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;gap:10px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Completed Transactions</span><span>' + completedTxns + ' checkouts</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Average Points / Purchase</span><span class="text-gold">+' + avgPtsPerPurch + ' pts</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Average Order Value</span><span>\u20b9' + avgOrderValue.toLocaleString() + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Current Month Transactions</span><span>' + curMonthCount + ' checkouts</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Current Month Revenue</span><span>\u20b9' + curMonthRev.toLocaleString() + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Total Points Minted</span><span class="text-gold">+' + totalPts.toLocaleString() + ' pts</span></div>' +
         '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Tier Upgrades Triggered</span><span class="text-purple">100% Automated</span></div>' +
       '</div>';
   }
@@ -771,14 +815,91 @@ function renderAnalyticsView() {
   var tierBox = document.getElementById("analyticsTierBreakdown");
   if (tierBox) {
     var counts = { Bronze: 0, Silver: 0, Gold: 0, Diamond: 0 };
-    customers.forEach(function(c) { counts[c.membership] = (counts[c.membership] || 0) + 1; });
-    var tot = totalCust || 1;
+    customers.forEach(function(c) {
+      var m = c.membership || "Bronze";
+      if (counts[m] !== undefined) counts[m]++;
+      else counts.Bronze++;
+    });
+    var pctB = totalCust > 0 ? Math.round((counts.Bronze / totalCust) * 100) : 0;
+    var pctS = totalCust > 0 ? Math.round((counts.Silver / totalCust) * 100) : 0;
+    var pctG = totalCust > 0 ? Math.round((counts.Gold / totalCust) * 100) : 0;
+    var pctD = totalCust > 0 ? Math.round((counts.Diamond / totalCust) * 100) : 0;
     tierBox.innerHTML = '' +
       '<div style="display:flex;flex-direction:column;gap:10px;">' +
-        '<div><small style="font-weight:700;">Bronze (\u20b90-\u20b92.5k): ' + counts.Bronze + ' (' + Math.round((counts.Bronze/tot)*100) + '%)</small></div>' +
-        '<div><small style="font-weight:700;">Silver (\u20b92.5k-\u20b95k): ' + counts.Silver + ' (' + Math.round((counts.Silver/tot)*100) + '%)</small></div>' +
-        '<div><small style="font-weight:700;">Gold (\u20b95k-\u20b910k): ' + counts.Gold + ' (' + Math.round((counts.Gold/tot)*100) + '%)</small></div>' +
-        '<div><small style="font-weight:700;">Diamond (\u20b910k+): ' + counts.Diamond + ' (' + Math.round((counts.Diamond/tot)*100) + '%)</small></div>' +
+        '<div><small style="font-weight:700;">Bronze (\u20b90\u2013\u20b930,000): ' + counts.Bronze + ' (' + pctB + '%)</small></div>' +
+        '<div><small style="font-weight:700;">Silver (\u20b930,000\u2013\u20b91,00,000): ' + counts.Silver + ' (' + pctS + '%)</small></div>' +
+        '<div><small style="font-weight:700;">Gold (\u20b91,00,000\u2013\u20b92,00,000): ' + counts.Gold + ' (' + pctG + '%)</small></div>' +
+        '<div><small style="font-weight:700;">Diamond (\u20b92,00,000+): ' + counts.Diamond + ' (' + pctD + '%)</small></div>' +
+      '</div>';
+  }
+}
+
+function applyServerAnalytics(analytics) {
+  var grid = document.getElementById("analyticsSummaryGrid");
+  if (!grid || !analytics) return;
+
+  var totalRev = analytics.totalRevenue || 0;
+  var totalPts = analytics.totalPointsIssued || 0;
+  var totalCust = analytics.activeMembers || 0;
+  var avgSpent = analytics.avgRevenuePerCustomer || 0;
+  var completedTxns = analytics.completedTransactions != null ? analytics.completedTransactions : transactions.length;
+  var avgPtsPerPurch = analytics.avgPointsPerPurchase != null ? analytics.avgPointsPerPurchase : 0;
+
+  grid.innerHTML = '' +
+    '<div class="analytics-stat-card">' +
+      '<small>Total Revenue</small>' +
+      '<h3>\u20b9' + totalRev.toLocaleString() + '</h3>' +
+      '<span>All logged transactions</span>' +
+    '</div>' +
+    '<div class="analytics-stat-card">' +
+      '<small>Loyalty Points Issued</small>' +
+      '<h3>' + totalPts.toLocaleString() + '</h3>' +
+      '<span>Active point economy</span>' +
+    '</div>' +
+    '<div class="analytics-stat-card">' +
+      '<small>Avg Revenue / Customer</small>' +
+      '<h3>\u20b9' + avgSpent.toLocaleString() + '</h3>' +
+      '<span>Customer lifetime value</span>' +
+    '</div>' +
+    '<div class="analytics-stat-card">' +
+      '<small>Active Members</small>' +
+      '<h3>' + totalCust + '</h3>' +
+      '<span>Registered profiles</span>' +
+    '</div>';
+
+  var trendsBox = document.getElementById("analyticsDetailedTrends");
+  if (trendsBox) {
+    var v = analytics.velocity || {};
+    var curCount = v.currentMonthTransactions != null ? v.currentMonthTransactions : 0;
+    var curRev = v.currentMonthRevenue != null ? v.currentMonthRevenue : 0;
+    var avgOrderVal = v.avgOrderValue != null ? v.avgOrderValue : (completedTxns > 0 ? Math.round(totalRev / completedTxns) : 0);
+
+    trendsBox.innerHTML = '' +
+      '<p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Monthly velocity computed from ledger records:</p>' +
+      '<div style="background:#F8FAFC;padding:16px;border-radius:var(--radius-md);border:1px solid var(--border-color);display:flex;flex-direction:column;gap:10px;">' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Completed Transactions</span><span>' + completedTxns + ' checkouts</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Average Points / Purchase</span><span class="text-gold">+' + avgPtsPerPurch + ' pts</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Average Order Value</span><span>\u20b9' + avgOrderVal.toLocaleString() + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Current Month Transactions</span><span>' + curCount + ' checkouts</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Current Month Revenue</span><span>\u20b9' + curRev.toLocaleString() + '</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Total Points Minted</span><span class="text-gold">+' + totalPts.toLocaleString() + ' pts</span></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;"><span>Tier Upgrades Triggered</span><span class="text-purple">100% Automated</span></div>' +
+      '</div>';
+  }
+
+  var tierBox = document.getElementById("analyticsTierBreakdown");
+  if (tierBox && analytics.tierCounts) {
+    var counts = analytics.tierCounts;
+    var pctB = totalCust > 0 ? Math.round(((counts.Bronze || 0) / totalCust) * 100) : 0;
+    var pctS = totalCust > 0 ? Math.round(((counts.Silver || 0) / totalCust) * 100) : 0;
+    var pctG = totalCust > 0 ? Math.round(((counts.Gold || 0) / totalCust) * 100) : 0;
+    var pctD = totalCust > 0 ? Math.round(((counts.Diamond || 0) / totalCust) * 100) : 0;
+    tierBox.innerHTML = '' +
+      '<div style="display:flex;flex-direction:column;gap:10px;">' +
+        '<div><small style="font-weight:700;">Bronze (\u20b90\u2013\u20b930,000): ' + (counts.Bronze || 0) + ' (' + pctB + '%)</small></div>' +
+        '<div><small style="font-weight:700;">Silver (\u20b930,000\u2013\u20b91,00,000): ' + (counts.Silver || 0) + ' (' + pctS + '%)</small></div>' +
+        '<div><small style="font-weight:700;">Gold (\u20b91,00,000\u2013\u20b92,00,000): ' + (counts.Gold || 0) + ' (' + pctG + '%)</small></div>' +
+        '<div><small style="font-weight:700;">Diamond (\u20b92,00,000+): ' + (counts.Diamond || 0) + ' (' + pctD + '%)</small></div>' +
       '</div>';
   }
 }
@@ -866,6 +987,7 @@ function handleSaveCustomer(event) {
       alert("Customer details updated successfully!");
       renderCustomersTable();
       renderDashboard();
+      renderActiveView();
     })
     .catch(function() {
       var custIndex = customers.findIndex(function(c) { return c.id === editId; });
@@ -879,6 +1001,7 @@ function handleSaveCustomer(event) {
       alert("Customer details updated successfully!");
       renderCustomersTable();
       renderDashboard();
+      renderActiveView();
     });
   } else {
     fetch('/api/customers', {
@@ -919,6 +1042,7 @@ function handleSaveCustomer(event) {
       }
       renderCustomersTable();
       renderDashboard();
+      renderActiveView();
     })
     .catch(function() {
       var existing = customers.find(function(c) { return c.phone === phone; });
@@ -940,6 +1064,7 @@ function handleSaveCustomer(event) {
       }
       renderCustomersTable();
       renderDashboard();
+      renderActiveView();
     });
   }
 }
@@ -953,6 +1078,7 @@ function deleteCustomer(customerId) {
   saveDataAll();
   renderCustomersTable();
   renderDashboard();
+  renderActiveView();
 }
 
 // --------------------------------------------------------------------------
@@ -1022,10 +1148,6 @@ function viewCustomerProfile(customerId) {
     });
   }
 
-  var addPurchBtn = document.getElementById("profAddPurchaseBtn");
-  if (addPurchBtn) {
-    addPurchBtn.onclick = function() { openAddPurchaseModal(customerId); };
-  }
   navigateTo("customer-profile");
 }
 
@@ -1309,6 +1431,7 @@ function handleCompletePurchase(event) {
     renderTransactionsTable();
     renderDashboard();
     renderRewardsPage();
+    renderActiveView();
     if (currentSelectedCustomerId === customerId) {
       viewCustomerProfile(customerId);
     }
@@ -1372,6 +1495,7 @@ function handleCompletePurchase(event) {
     renderTransactionsTable();
     renderDashboard();
     renderRewardsPage();
+    renderActiveView();
     if (currentSelectedCustomerId === customerId) {
       viewCustomerProfile(customerId);
     }
@@ -1575,6 +1699,8 @@ function redeemReward(rewardName, customerId) {
     if (idx !== -1) customers[idx] = result.customer;
     saveCustomers();
     renderRewardsPage();
+    renderDashboard();
+    renderActiveView();
     if (currentSelectedCustomerId === cust.id) {
       viewCustomerProfile(cust.id);
     }
@@ -1584,6 +1710,8 @@ function redeemReward(rewardName, customerId) {
     cust.redeemedRewards.push(rewardName);
     saveCustomers();
     renderRewardsPage();
+    renderDashboard();
+    renderActiveView();
     if (currentSelectedCustomerId === cust.id) {
       viewCustomerProfile(cust.id);
     }
@@ -1851,6 +1979,8 @@ function handleSaveProduct(event) {
   }
 
   renderProductsGrid();
+  renderDashboard();
+  renderActiveView();
 }
 
 function deleteProduct(productNumericId) {
@@ -1867,6 +1997,8 @@ function deleteProduct(productNumericId) {
 
   showToast("Product deleted.", "fa-trash-can");
   renderProductsGrid();
+  renderDashboard();
+  renderActiveView();
 }
 
 // --------------------------------------------------------------------------
@@ -2118,6 +2250,8 @@ function confirmAndExecuteDeleteProducts() {
     saveDataAll();
     closeModal("deleteProductsModal");
     renderProductsGrid();
+    renderDashboard();
+    renderActiveView();
     var deletedCount = data.deletedCount || idsToDelete.length;
     showToast("Successfully deleted " + deletedCount + " product" + (deletedCount === 1 ? "" : "s") + ".", "fa-trash-can");
   })
@@ -2128,6 +2262,8 @@ function confirmAndExecuteDeleteProducts() {
     saveDataAll();
     closeModal("deleteProductsModal");
     renderProductsGrid();
+    renderDashboard();
+    renderActiveView();
     showToast("Successfully deleted " + idsToDelete.length + " product" + (idsToDelete.length === 1 ? "" : "s") + ".", "fa-trash-can");
   });
 }
@@ -2643,6 +2779,7 @@ function handleCartCheckoutPurchase() {
     renderTransactionsTable();
     renderDashboard();
     renderRewardsPage();
+    renderActiveView();
 
     if (currentSelectedCustomerId === custId) {
       viewCustomerProfile(custId);
@@ -2733,6 +2870,7 @@ function handleCartCheckoutPurchase() {
     renderTransactionsTable();
     renderDashboard();
     renderRewardsPage();
+    renderActiveView();
 
     if (currentSelectedCustomerId === customer.id) {
       viewCustomerProfile(customer.id);
