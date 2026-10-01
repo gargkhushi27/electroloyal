@@ -1,5 +1,5 @@
 /**
- * Central Server & API for ELECTROLOYAL
+ * Central Server & API for Gadget Grid
  * Multi-Computer Data Server with Real-Time SSE Sync
  */
 
@@ -176,7 +176,8 @@ const server = http.createServer(async (req, res) => {
           customers,
           products,
           transactions,
-          stats
+          stats,
+          loyaltyConfig: db.getLoyaltyConfig()
         });
       }
 
@@ -193,7 +194,8 @@ const server = http.createServer(async (req, res) => {
         if (!result.isExisting) {
           broadcastEvent('CUSTOMER_CREATED', { customerId: result.customer.id });
         }
-        return sendJson(res, 201, { success: true, ...result });
+        const statusCode = result.isExisting ? 200 : 201;
+        return sendJson(res, statusCode, { success: true, ...result });
       }
 
       if (pathname.startsWith('/api/customers/') && method === 'GET') {
@@ -246,6 +248,29 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { success: true, id });
       }
 
+      // Batch Delete Products API
+      if ((pathname === '/api/products/batch-delete' || pathname === '/api/products/delete-batch') && method === 'POST') {
+        const body = await parseJsonBody(req);
+        const { ids } = body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+          return sendJson(res, 400, { error: 'Please provide an array of product IDs to delete.' });
+        }
+        const result = db.deleteProducts(ids);
+        broadcastEvent('PRODUCTS_DELETED', { deletedIds: result.deletedIds, count: result.deletedCount });
+        return sendJson(res, 200, result);
+      }
+
+      if (pathname === '/api/products' && method === 'DELETE') {
+        const body = await parseJsonBody(req);
+        const { ids } = body;
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+          return sendJson(res, 400, { error: 'Please provide an array of product IDs to delete.' });
+        }
+        const result = db.deleteProducts(ids);
+        broadcastEvent('PRODUCTS_DELETED', { deletedIds: result.deletedIds, count: result.deletedCount });
+        return sendJson(res, 200, result);
+      }
+
       // 6. Transactions API
       if (pathname === '/api/transactions' && method === 'GET') {
         const q = parsedUrl.searchParams.get('q') || '';
@@ -279,7 +304,25 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, { success: true, stats });
       }
 
-      // 10. Database Reset API
+      // 10. Loyalty Settings API
+      if (pathname === '/api/settings/loyalty' && method === 'GET') {
+        const config = db.getLoyaltyConfig();
+        return sendJson(res, 200, { success: true, loyalty: config });
+      }
+
+      if ((pathname === '/api/settings/loyalty' || pathname === '/api/config/loyalty') && (method === 'PUT' || method === 'POST')) {
+        const body = await parseJsonBody(req);
+        const { spendingAmount, pointsEarned } = body;
+        if (!spendingAmount || !pointsEarned || Number(spendingAmount) <= 0 || Number(pointsEarned) <= 0) {
+          return sendJson(res, 400, { success: false, error: 'Spending amount and points must be positive numbers.' });
+        }
+        const updated = db.updateLoyaltyConfig(spendingAmount, pointsEarned);
+        dataVersion++;
+        broadcastEvent('LOYALTY_CONFIG_UPDATED', updated);
+        return sendJson(res, 200, { success: true, loyalty: updated });
+      }
+
+      // 11. Database Reset API
       if (pathname === '/api/reset' && method === 'POST') {
         db.resetDatabase();
         broadcastEvent('DATA_RESET', {});
@@ -304,7 +347,7 @@ const server = http.createServer(async (req, res) => {
 if (require.main === module) {
   server.listen(PORT, HOST, () => {
     console.log(`=======================================================`);
-    console.log(`ELECTROLOYAL Central Database Server running!`);
+    console.log(`Gadget Grid Central Database Server running!`);
     console.log(`Local Access:   http://localhost:${PORT}`);
     console.log(`Network Access: http://${HOST}:${PORT}`);
     console.log(`SQLite DB:      ${db.DB_PATH}`);

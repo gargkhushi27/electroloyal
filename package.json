@@ -1,7 +1,7 @@
 {
-  "name": "electroloyal",
+  "name": "gadget-grid",
   "version": "1.0.0",
-  "description": "Electronics Retail Customer Loyalty Management System",
+  "description": "Gadget Grid - Electronics Retail Customer Loyalty Management System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

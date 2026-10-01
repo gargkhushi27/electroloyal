@@ -1,5 +1,5 @@
 /**
- * Central Database Module for ELECTROLOYAL
+ * Central Database Module for Gadget Grid
  * Powered by built-in node:sqlite (ACID compliant, zero external dependencies)
  */
 
@@ -87,6 +87,11 @@ function initSchema() {
       date TEXT NOT NULL,
       rewardActivity TEXT,
       createdAt TEXT NOT NULL,
+      subtotal REAL DEFAULT 0,
+      discount REAL DEFAULT 0,
+      finalAmount REAL DEFAULT 0,
+      pointsRedeemed INTEGER DEFAULT 0,
+      remainingPoints INTEGER DEFAULT 0,
       FOREIGN KEY (customerId) REFERENCES customers(id)
     );
 
@@ -100,9 +105,45 @@ function initSchema() {
       subtotal REAL NOT NULL,
       FOREIGN KEY (transactionId) REFERENCES transactions(transactionId)
     );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
 
+  // Ensure default loyalty_ratio configuration exists
+  try {
+    const existingRatio = db.prepare("SELECT value FROM settings WHERE key = 'loyalty_ratio'").get();
+    if (!existingRatio) {
+      db.prepare("INSERT INTO settings (key, value) VALUES ('loyalty_ratio', ?)").run(
+        JSON.stringify({ spendingAmount: 500, pointsEarned: 10 })
+      );
+    }
+  } catch (e) {}
+
+  // Ensure transaction reward and discount columns exist on existing database
+  try {
+    const txnCols = db.prepare("PRAGMA table_info(transactions)").all().map(c => c.name);
+    if (!txnCols.includes('subtotal')) db.exec("ALTER TABLE transactions ADD COLUMN subtotal REAL DEFAULT 0;");
+    if (!txnCols.includes('discount')) db.exec("ALTER TABLE transactions ADD COLUMN discount REAL DEFAULT 0;");
+    if (!txnCols.includes('finalAmount')) db.exec("ALTER TABLE transactions ADD COLUMN finalAmount REAL DEFAULT 0;");
+    if (!txnCols.includes('pointsRedeemed')) db.exec("ALTER TABLE transactions ADD COLUMN pointsRedeemed INTEGER DEFAULT 0;");
+    if (!txnCols.includes('remainingPoints')) db.exec("ALTER TABLE transactions ADD COLUMN remainingPoints INTEGER DEFAULT 0;");
+    db.exec("UPDATE transactions SET subtotal = amount, finalAmount = amount WHERE subtotal IS NULL OR subtotal = 0;");
+  } catch (e) {}
+
   seedInitialData();
+
+  // Ensure customer membership values in database match current lifetime spending tiers
+  try {
+    db.exec(`
+      UPDATE customers SET membership = 'Diamond' WHERE totalSpending >= 200000;
+      UPDATE customers SET membership = 'Gold' WHERE totalSpending >= 100000 AND totalSpending < 200000;
+      UPDATE customers SET membership = 'Silver' WHERE totalSpending >= 30000 AND totalSpending < 100000;
+      UPDATE customers SET membership = 'Bronze' WHERE totalSpending < 30000;
+    `);
+  } catch (e) {}
 }
 
 // ---------------------------------------------------------------------------
@@ -176,10 +217,10 @@ function seedInitialData() {
   const custCount = db.prepare('SELECT COUNT(*) as count FROM customers').get().count;
   if (custCount === 0) {
     const INITIAL_CUSTOMERS = [
-      { id: "ELC-000001", name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "9876543210", dob: "1994-06-12", membership: "Gold", totalSpending: 7498, points: 140, purchasesCount: 2, createdAt: "2026-08-15" },
-      { id: "ELC-000002", name: "Priya Patel", email: "priya.patel@example.com", phone: "9812345678", dob: "1998-11-20", membership: "Diamond", totalSpending: 34999, points: 690, purchasesCount: 1, createdAt: "2026-09-01" },
+      { id: "ELC-000001", name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "9876543210", dob: "1994-06-12", membership: "Bronze", totalSpending: 7498, points: 140, purchasesCount: 2, createdAt: "2026-08-15" },
+      { id: "ELC-000002", name: "Priya Patel", email: "priya.patel@example.com", phone: "9812345678", dob: "1998-11-20", membership: "Silver", totalSpending: 34999, points: 690, purchasesCount: 1, createdAt: "2026-09-01" },
       { id: "ELC-000003", name: "Rohan Verma", email: "rohan.v@example.com", phone: "9988776655", dob: "2000-02-05", membership: "Bronze", totalSpending: 1499, points: 20, purchasesCount: 1, createdAt: "2026-09-10" },
-      { id: "ELC-000004", name: "Ananya Roy", email: "ananya.roy@example.com", phone: "9765432109", dob: "1992-09-30", membership: "Silver", totalSpending: 3999, points: 70, purchasesCount: 1, createdAt: "2026-09-18" }
+      { id: "ELC-000004", name: "Ananya Roy", email: "ananya.roy@example.com", phone: "9765432109", dob: "1992-09-30", membership: "Bronze", totalSpending: 3999, points: 70, purchasesCount: 1, createdAt: "2026-09-18" }
     ];
 
     const insertCust = db.prepare(`
@@ -245,6 +286,9 @@ function resetDatabase() {
     db.exec('DELETE FROM transactions');
     db.exec('DELETE FROM customers');
     db.exec('DELETE FROM products');
+    db.prepare("INSERT INTO settings (key, value) VALUES ('loyalty_ratio', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value").run(
+      JSON.stringify({ spendingAmount: 500, pointsEarned: 10 })
+    );
     seedInitialData();
     db.exec('COMMIT');
     return { success: true };
@@ -258,16 +302,79 @@ function resetDatabase() {
 // 3. CORE BUSINESS RULES (Pure, Centralized Functions)
 // ---------------------------------------------------------------------------
 
+function getLoyaltyConfig() {
+  try {
+    const row = db.prepare("SELECT value FROM settings WHERE key = 'loyalty_ratio'").get();
+    if (row && row.value) {
+      const parsed = JSON.parse(row.value);
+      const spendingAmount = Number(parsed.spendingAmount);
+      const pointsEarned = Number(parsed.pointsEarned);
+      if (spendingAmount > 0 && pointsEarned > 0) {
+        return { spendingAmount, pointsEarned };
+      }
+    }
+  } catch (e) {}
+  return { spendingAmount: 500, pointsEarned: 10 };
+}
+
+function updateLoyaltyConfig(spendingAmount, pointsEarned) {
+  const spend = Math.round(Number(spendingAmount));
+  const pts = Math.round(Number(pointsEarned));
+
+  if (!spend || isNaN(spend) || spend <= 0) {
+    throw new Error("Spending amount must be a positive number.");
+  }
+  if (!pts || isNaN(pts) || pts <= 0) {
+    throw new Error("Points must be a positive number.");
+  }
+
+  const value = JSON.stringify({ spendingAmount: spend, pointsEarned: pts });
+  db.prepare(`
+    INSERT INTO settings (key, value) VALUES ('loyalty_ratio', ?)
+    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+  `).run(value);
+
+  return { spendingAmount: spend, pointsEarned: pts };
+}
+
 function calculatePoints(amount) {
-  if (!amount || amount < 500) return 0;
-  return Math.floor(amount / 500) * 10;
+  if (!amount || amount <= 0) return 0;
+  const config = getLoyaltyConfig();
+  if (amount < config.spendingAmount) return 0;
+  return Math.floor(amount / config.spendingAmount) * config.pointsEarned;
+}
+
+function calculateRewardDiscount(availablePoints, subtotal = Infinity) {
+  const points = Math.max(0, parseInt(availablePoints, 10) || 0);
+  let pointsRedeemed = 0;
+  let discount = 0;
+
+  if (points >= 1000) {
+    pointsRedeemed = 1000;
+    discount = 750;
+  } else if (points >= 500) {
+    pointsRedeemed = 500;
+    discount = 350;
+  } else if (points >= 250) {
+    pointsRedeemed = 250;
+    discount = 150;
+  } else if (points >= 100) {
+    pointsRedeemed = 100;
+    discount = 50;
+  }
+
+  if (discount > subtotal) {
+    discount = subtotal;
+  }
+
+  return { pointsRedeemed, discount };
 }
 
 function calculateMembership(totalSpending) {
   const spending = totalSpending || 0;
-  if (spending >= 10000) return "Diamond";
-  if (spending >= 5000) return "Gold";
-  if (spending >= 2500) return "Silver";
+  if (spending >= 200000) return "Diamond";
+  if (spending >= 100000) return "Gold";
+  if (spending >= 30000) return "Silver";
   return "Bronze";
 }
 
@@ -276,13 +383,13 @@ function getUnlockedRewards(customer) {
   const spending = customer.totalSpending || 0;
   const membership = customer.membership || calculateMembership(spending);
   const rewards = [{ id: "rw-bronze", name: "Birthday Reward (5% OFF)", tier: "Bronze", description: "Special Birthday reward coupon", status: "Available" }];
-  if (spending >= 2500 || membership === "Silver" || membership === "Gold" || membership === "Diamond") {
+  if (spending >= 30000 || membership === "Silver" || membership === "Gold" || membership === "Diamond") {
     rewards.push({ id: "rw-silver", name: "Silver Special Offer (\u20b9250 Voucher)", tier: "Silver", description: "5% discount on selected products", status: "Available" });
   }
-  if (spending >= 5000 || membership === "Gold" || membership === "Diamond") {
+  if (spending >= 100000 || membership === "Gold" || membership === "Diamond") {
     rewards.push({ id: "rw-gold", name: "Gold Free Gift Package", tier: "Gold", description: "Free accessory gift box on qualifying purchase", status: "Available" });
   }
-  if (spending >= 10000 || membership === "Diamond") {
+  if (spending >= 200000 || membership === "Diamond") {
     rewards.push({ id: "rw-diamond-1", name: "Diamond Premium Gift & VIP Access", tier: "Diamond", description: "15% off + VIP launch invitations", status: "Available" });
     rewards.push({ id: "rw-diamond-2", name: "Exclusive Product Launch Access", tier: "Diamond", description: "VIP early access to reserve new smartphone & laptop launches", status: "Available" });
   }
@@ -358,9 +465,10 @@ function formatCustomerRow(row) {
   return cust;
 }
 
-function createOrGetCustomer(data) {
-  const name = (data.name || "").trim();
-  const phone = (data.phone || "").trim();
+function createOrGetCustomer(data, optionalPhone) {
+  const payload = typeof data === 'string' ? { name: data, phone: optionalPhone } : (data || {});
+  const name = (payload.name || "").trim();
+  const phone = (payload.phone || "").trim();
   if (!name || !phone) {
     throw new Error("Both Name and Phone number are required.");
   }
@@ -394,6 +502,12 @@ function updateCustomer(id, data) {
 
   const name = data.name !== undefined ? data.name.trim() : customer.name;
   const phone = data.phone !== undefined ? data.phone.trim() : customer.phone;
+  const email = data.email !== undefined ? data.email : customer.email;
+  const points = data.points !== undefined ? parseInt(data.points, 10) : customer.points;
+  const totalSpending = data.totalSpending !== undefined ? parseFloat(data.totalSpending) : customer.totalSpending;
+  const membership = data.membership !== undefined ? data.membership : customer.membership;
+  const purchasesCount = data.purchasesCount !== undefined ? parseInt(data.purchasesCount, 10) : customer.purchasesCount;
+  const redeemedRewards = data.redeemedRewards !== undefined ? JSON.stringify(data.redeemedRewards) : JSON.stringify(customer.redeemedRewards || []);
 
   // Check phone uniqueness if phone is changing
   if (phone !== customer.phone) {
@@ -401,8 +515,11 @@ function updateCustomer(id, data) {
     if (existing) throw new Error(`Customer with phone ${phone} already exists (${existing.name}).`);
   }
 
-  db.prepare("UPDATE customers SET name = ?, phone = ?, email = ? WHERE id = ?")
-    .run(name, phone, data.email !== undefined ? data.email : customer.email, id);
+  db.prepare(`
+    UPDATE customers 
+    SET name = ?, phone = ?, email = ?, points = ?, totalSpending = ?, membership = ?, purchasesCount = ?, redeemedRewards = ?
+    WHERE id = ?
+  `).run(name, phone, email, points, totalSpending, membership, purchasesCount, redeemedRewards, id);
 
   // Update customerName across transactions
   db.prepare("UPDATE transactions SET customerName = ? WHERE customerId = ?").run(name, id);
@@ -497,6 +614,28 @@ function deleteProduct(id) {
   return { success: true, id };
 }
 
+function deleteProducts(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) {
+    throw new Error("No product IDs provided for deletion.");
+  }
+  const numericIds = ids.map(id => parseInt(id, 10)).filter(id => !isNaN(id) && id > 0);
+  if (numericIds.length === 0) {
+    throw new Error("Invalid product IDs provided.");
+  }
+
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    const placeholders = numericIds.map(() => '?').join(',');
+    const stmt = db.prepare(`DELETE FROM products WHERE id IN (${placeholders})`);
+    const info = stmt.run(...numericIds);
+    db.exec('COMMIT');
+    return { success: true, deletedCount: info.changes, deletedIds: numericIds };
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 6. ATOMIC PURCHASE WORKFLOW (CONCURRENCY-SAFE TRANSACTION)
 // ---------------------------------------------------------------------------
@@ -569,10 +708,18 @@ function executePurchaseAtomic({ customerId, customerSearchQuery, items, payment
       }
     }
 
-    // 4. Calculate loyalty points & customer tier updates
-    const earnedPoints = calculatePoints(totalAmount);
-    const newSpending = (customerRow.totalSpending || 0) + totalAmount;
-    const newPoints = (customerRow.points || 0) + earnedPoints;
+    // 4. Check available loyalty points & automatically select highest eligible reward
+    const subtotalAmount = totalAmount;
+    const availablePoints = customerRow.points || 0;
+    const { pointsRedeemed, discount } = calculateRewardDiscount(availablePoints, subtotalAmount);
+    const finalAmount = Math.max(0, subtotalAmount - discount);
+
+    // 5. Calculate new points earned on this purchase (from eligible final amount)
+    const earnedPoints = calculatePoints(finalAmount);
+
+    // 6. Update customer balance: deduct redeemed points, add new earned points
+    const remainingPoints = (availablePoints - pointsRedeemed) + earnedPoints;
+    const newSpending = (customerRow.totalSpending || 0) + finalAmount;
     const newPurchasesCount = (customerRow.purchasesCount || 0) + 1;
     const oldTier = customerRow.membership;
     const newTier = calculateMembership(newSpending);
@@ -580,20 +727,31 @@ function executePurchaseAtomic({ customerId, customerSearchQuery, items, payment
     db.prepare(`
       UPDATE customers SET totalSpending = ?, points = ?, purchasesCount = ?, membership = ?
       WHERE id = ?
-    `).run(newSpending, newPoints, newPurchasesCount, newTier, customerRow.id);
+    `).run(newSpending, remainingPoints, newPurchasesCount, newTier, customerRow.id);
 
-    // 5. Generate exactly ONE transaction record
+    // 7. Generate exactly ONE transaction record
     const nextTxnId = generateNextTransactionId();
     const productSummary = validatedItems.map(vi =>
       vi.product.name + (vi.quantity > 1 ? ` (×${vi.quantity})` : "")
     ).join(", ");
     const totalQty = validatedItems.reduce((sum, vi) => sum + vi.quantity, 0);
-    const rewardNote = oldTier !== newTier ? `Upgraded to ${newTier} Tier!` : "Purchase Completed";
+
+    let rewardNote = "Purchase Completed";
+    if (pointsRedeemed > 0) {
+      rewardNote = `Auto-Redeemed ${pointsRedeemed} pts (₹${discount} OFF)`;
+    } else if (oldTier !== newTier) {
+      rewardNote = `Upgraded to ${newTier} Tier!`;
+    }
+
     const nowIso = new Date().toISOString();
 
     db.prepare(`
-      INSERT INTO transactions (transactionId, customerId, customerName, productId, productName, quantity, amount, paymentMethod, points, date, rewardActivity, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO transactions (
+        transactionId, customerId, customerName, productId, productName,
+        quantity, amount, paymentMethod, points, date, rewardActivity,
+        createdAt, subtotal, discount, finalAmount, pointsRedeemed, remainingPoints
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       nextTxnId,
       customerRow.id,
@@ -601,12 +759,17 @@ function executePurchaseAtomic({ customerId, customerSearchQuery, items, payment
       validatedItems[0].product.id,
       productSummary,
       totalQty,
-      totalAmount,
+      finalAmount, // amount is final amount
       paymentMethod,
       earnedPoints,
       txnDate,
       rewardNote,
-      nowIso
+      nowIso,
+      subtotalAmount,
+      discount,
+      finalAmount,
+      pointsRedeemed,
+      remainingPoints
     );
 
     // Record transaction line items
@@ -636,8 +799,14 @@ function executePurchaseAtomic({ customerId, customerSearchQuery, items, payment
       success: true,
       transaction: createdTxn,
       customer: updatedCustomer,
+      subtotal: subtotalAmount,
+      discount,
+      finalAmount,
+      totalAmount: finalAmount,
+      pointsRedeemed,
       earnedPoints,
-      totalAmount,
+      remainingPoints,
+      availablePoints,
       updatedProducts
     };
 
@@ -722,12 +891,16 @@ module.exports = {
   createProduct,
   updateProduct,
   deleteProduct,
+  deleteProducts,
   getTransactions,
   executePurchaseAtomic,
+  calculateRewardDiscount,
   redeemReward,
   getStats,
   calculatePoints,
   calculateMembership,
   getUnlockedRewards,
+  getLoyaltyConfig,
+  updateLoyaltyConfig,
   resetDatabase
 };

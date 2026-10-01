@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ELECTROLOYAL - Electronics Retail Customer Loyalty Management System</title>
+  <title>Gadget Grid - Electronics Retail Customer Loyalty Management System</title>
+  <link rel="icon" type="image/svg+xml" href="images/gadget-grid-favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,10 +17,9 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="logo-icon"><i class="fa-solid fa-bolt"></i></div>
-        <div class="logo-text">
-          <h2>ELECTROLOYAL</h2>
-          <p>Electronics Loyalty System</p>
+        <div class="brand-wrap">
+          <img src="images/gadget-logo.png" alt="Gadget_" class="sidebar-brand-logo">
+          <p class="brand-subtext">Electronics Store &amp; Loyalty</p>
         </div>
       </div>
 
@@ -33,9 +33,6 @@
           </li>
           <li class="nav-item" data-page="products">
             <a href="#"><i class="fa-solid fa-box-open"></i> <span>Products</span></a>
-          </li>
-          <li class="nav-item" data-page="cart" onclick="openCartPanel(); return false;">
-            <a href="#"><i class="fa-solid fa-cart-shopping"></i> <span>Cart</span> <span class="sidebar-cart-badge" id="sidebarCartBadge">0</span></a>
           </li>
           <li class="nav-item" data-page="membership">
             <a href="#"><i class="fa-solid fa-crown"></i> <span>Membership</span></a>
@@ -71,42 +68,7 @@
 
     <!-- MAIN CONTENT AREA -->
     <main class="main-content">
-      <!-- TOP HEADER -->
-      <header class="top-header">
-        <div class="header-left-col">
-          <div class="header-global-search">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="globalSearchInput" placeholder="Search customers, products, transactions..." autocomplete="off">
-            <div class="global-search-results" id="globalSearchResults"></div>
-          </div>
-        </div>
-        <div class="header-actions">
-          <button class="header-icon-btn notification-btn" title="Notifications">
-            <i class="fa-regular fa-bell"></i>
-            <span class="badge-dot"></span>
-          </button>
-          <div class="user-profile dropdown-trigger" id="userProfileDropdownTrigger" tabindex="0">
-            <div class="admin-avatar-circle"><i class="fa-solid fa-user-tie"></i></div>
-            <div class="user-meta-text">
-              <span class="user-name">Store Manager</span>
-              <span class="user-role-badge">Admin</span>
-            </div>
-            <i class="fa-solid fa-chevron-down user-dropdown-caret"></i>
-            <div class="user-profile-dropdown" id="userProfileDropdown">
-              <div class="dropdown-header">
-                <strong>Store Manager</strong>
-                <small>admin@electroloyal.com</small>
-              </div>
-              <div class="dropdown-divider"></div>
-              <a href="#" onclick="navigateTo('analytics'); return false;"><i class="fa-solid fa-chart-line"></i> Store Analytics</a>
-              <a href="#" onclick="navigateTo('membership'); return false;"><i class="fa-solid fa-crown"></i> Membership Policy</a>
-              <a href="#" onclick="openModal('backupModal'); return false;"><i class="fa-solid fa-database"></i> Backup / Restore</a>
-              <div class="dropdown-divider"></div>
-              <a href="#" onclick="alert('Session active as Store Manager'); return false;" class="text-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</a>
-            </div>
-          </div>
-        </div>
-      </header>
+
 
       <!-- VIEW SECTIONS -->
 
@@ -605,12 +567,12 @@
           <div class="progress-container">
             <div class="progress-labels">
               <span id="profProgressCurrent">₹0</span>
-              <span id="profProgressTarget">₹10,000</span>
+              <span id="profProgressTarget">₹30,000</span>
             </div>
             <div class="progress-bar-bg">
-              <div id="profProgressBarFill" class="progress-bar-fill" style="width: 50%;"></div>
+              <div id="profProgressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
             </div>
-            <p id="profProgressText" class="progress-text">₹2,800 more to reach Diamond</p>
+            <p id="profProgressText" class="progress-text">₹30,000 more to reach Silver</p>
           </div>
         </div>
 
@@ -680,9 +642,21 @@
               <option value="above50000">Above ₹50,000</option>
             </select>
           </div>
-          <button class="btn btn-primary" id="openAddProductModalBtn">
-            <i class="fa-solid fa-plus"></i> Add Product
-          </button>
+          <div class="product-menu-container">
+            <button type="button" class="product-action-menu-btn" id="productMenuBtn" title="Product Options" aria-label="Product Options">
+              <i class="fa-solid fa-ellipsis-vertical"></i>
+            </button>
+            <div class="product-action-menu-dropdown" id="productMenuDropdown">
+              <button type="button" class="product-menu-dropdown-item" id="menuAddProductBtn">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Product</span>
+              </button>
+              <button type="button" class="product-menu-dropdown-item danger" id="menuDeleteProductsBtn">
+                <i class="fa-solid fa-trash-can"></i>
+                <span>Delete Products</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Category Filter Chips -->
@@ -779,7 +753,7 @@
             <div class="tier-card-header bronze">
               <i class="fa-solid fa-shield"></i>
               <h2>BRONZE</h2>
-              <span class="tier-spending-range">₹0 – ₹2,499</span>
+              <span class="tier-spending-range">₹0 – ₹30,000</span>
             </div>
             <div class="tier-card-body">
               <h4>Benefits & Perks:</h4>
@@ -796,7 +770,7 @@
             <div class="tier-card-header silver">
               <i class="fa-solid fa-shield-halved"></i>
               <h2>SILVER</h2>
-              <span class="tier-spending-range">₹2,500 – ₹4,999</span>
+              <span class="tier-spending-range">₹30,000 – ₹1,00,000</span>
             </div>
             <div class="tier-card-body">
               <h4>Benefits & Perks:</h4>
@@ -813,7 +787,7 @@
             <div class="tier-card-header gold">
               <i class="fa-solid fa-crown"></i>
               <h2>GOLD</h2>
-              <span class="tier-spending-range">₹5,000 – ₹9,999</span>
+              <span class="tier-spending-range">₹1,00,000 – ₹2,00,000</span>
             </div>
             <div class="tier-card-body">
               <h4>Benefits & Perks:</h4>
@@ -830,7 +804,7 @@
             <div class="tier-card-header diamond">
               <i class="fa-solid fa-gem"></i>
               <h2>DIAMOND</h2>
-              <span class="tier-spending-range">₹10,000+</span>
+              <span class="tier-spending-range">₹2,00,000+</span>
             </div>
             <div class="tier-card-body">
               <h4>Benefits & Perks:</h4>
@@ -920,13 +894,53 @@
           <div class="card-header">
             <h2><i class="fa-solid fa-sliders text-purple"></i> Loyalty Program Configuration</h2>
           </div>
-          <div class="settings-grid">
+
+          <form id="loyaltyRatioForm" onsubmit="handleSaveLoyaltyRatio(event)" style="padding: 20px 24px;">
+            <div style="margin-bottom: 18px;">
+              <h3 style="font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">Points per Spending Amount</h3>
+              <p style="color: var(--text-muted); font-size: 13px; margin: 0;">Configure standard loyalty points earned per purchase spending amount for all future purchases.</p>
+            </div>
+
+            <div class="form-row grid-2-col" style="gap: 16px; margin-bottom: 18px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="settingSpendingAmount" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: block;">Spending Amount (₹)</label>
+                <div style="position: relative;">
+                  <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 600;">₹</span>
+                  <input type="number" id="settingSpendingAmount" min="1" step="1" required placeholder="500" value="500" style="padding-left: 28px; width: 100%;">
+                </div>
+                <small style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: block;">Spending increment interval (e.g. ₹500)</small>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="settingPointsEarned" style="font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; display: block;">Points Earned</label>
+                <div style="position: relative;">
+                  <input type="number" id="settingPointsEarned" min="1" step="1" required placeholder="10" value="10" style="width: 100%;">
+                </div>
+                <small style="color: var(--text-muted); font-size: 11px; margin-top: 4px; display: block;">Points awarded per spending increment (e.g. 10)</small>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+              <div style="font-size: 13px; color: var(--text-muted);">
+                Active ratio: <strong id="currentRatioPreview" style="color: var(--coral);">10 points per ₹500 spent</strong>
+              </div>
+              <button type="submit" class="btn btn-primary" id="saveLoyaltyRatioBtn">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+              </button>
+            </div>
+
+            <div id="loyaltyRatioSuccessMsg" style="display: none; margin-top: 14px; padding: 10px 14px; background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: var(--radius-md); color: #065F46; font-size: 13px; font-weight: 600;">
+              <i class="fa-solid fa-circle-check"></i> Point earning ratio updated successfully!
+            </div>
+          </form>
+
+          <div class="settings-grid" style="border-top: 1px solid var(--border-color); padding: 20px 24px;">
             <div class="setting-item">
               <div>
-                <strong>Point Earning Ratio</strong>
+                <strong>Point Earning Ratio (Active)</strong>
                 <p style="color:var(--text-muted);font-size:12px;">Standard points issued per purchase interval.</p>
               </div>
-              <span class="badge-cat" style="font-size:13px;padding:4px 10px;">10 pts / ₹500</span>
+              <span class="badge-cat" id="settingRatioBadge" style="font-size:13px;padding:4px 10px;">10 pts / ₹500</span>
             </div>
             <div class="setting-item">
               <div>
@@ -1043,19 +1057,39 @@
             <strong id="calcStock">0 units</strong>
           </div>
           <div class="calc-row">
-            <span>Total Amount:</span>
-            <strong id="calcTotalAmount" class="text-purple">₹0</strong>
+            <span>Subtotal Amount:</span>
+            <strong id="calcSubtotalAmount">₹0</strong>
           </div>
           <div class="calc-row">
-            <span>Loyalty Points Earned:</span>
-            <strong id="calcPointsEarned" class="text-gold">+0 Points</strong>
+            <span>Available Points:</span>
+            <strong id="calcAvailablePoints" style="color:var(--gold);">0 pts</strong>
+          </div>
+          <div class="calc-row">
+            <span>Automatically Applied Reward:</span>
+            <strong id="calcDiscountAmount" style="color:#10b981;">No reward available yet</strong>
+          </div>
+          <div class="calc-row">
+            <span>Points Redeemed:</span>
+            <strong id="calcPointsRedeemed" style="color:var(--text-muted);">0 pts</strong>
+          </div>
+          <div class="calc-row">
+            <span>Final Payable Amount:</span>
+            <strong id="calcTotalAmount" class="text-purple" style="font-size:15px;">₹0</strong>
+          </div>
+          <div class="calc-row">
+            <span>Current Purchase Points Earned:</span>
+            <strong id="calcPointsEarned" style="color:var(--gold);">+0 Points</strong>
+          </div>
+          <div class="calc-row">
+            <span>Remaining Points Balance:</span>
+            <strong id="calcRemainingPoints" class="text-purple">0 pts</strong>
           </div>
           <div class="calc-row" id="calcTierRow" style="display:none;">
             <span>Projected Membership:</span>
             <strong id="calcProjectedTier" class="text-purple">Bronze</strong>
           </div>
           <div class="calc-note">
-            <i class="fa-solid fa-lightbulb"></i> Points Formula: Math.floor(Amount / 500) * 10
+            <i class="fa-solid fa-lightbulb"></i> Points Formula: ₹500 spending = 10 pts (calculated on final payable amount)
           </div>
         </div>
 
@@ -1197,6 +1231,43 @@
     </div>
   </div>
 
+  <!-- DELETE PRODUCTS MODAL -->
+  <div class="modal-overlay" id="deleteProductsModal">
+    <div class="modal-card modal-delete-products">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-trash-can text-danger"></i> Delete Products</h3>
+        <button class="modal-close" onclick="closeModal('deleteProductsModal')">&times;</button>
+      </div>
+      <div class="delete-products-content">
+        <p class="delete-products-subtitle">Select the products you wish to remove from the active catalogue. Historical transactions and customer purchases will remain safely intact.</p>
+        
+        <div class="delete-products-toolbar">
+          <div class="delete-search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="deleteProductSearchInput" placeholder="Search products by name, ID or category...">
+          </div>
+          <div class="delete-actions-toolbar">
+            <label class="select-all-checkbox-label">
+              <input type="checkbox" id="selectAllDeleteProductsCheckbox">
+              <span>Select All</span>
+            </label>
+            <span class="selected-count-badge" id="deleteProductsSelectedCount">0 selected</span>
+          </div>
+        </div>
+
+        <div class="delete-products-scroll-list" id="deleteProductsList">
+          <!-- Dynamically populated selectable product items -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('deleteProductsModal')">Cancel</button>
+        <button type="button" class="btn btn-danger" id="executeDeleteProductsBtn" disabled>
+          <i class="fa-solid fa-trash-can"></i> Delete Selected (<span id="deleteSelectedCountText">0</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- CART PANEL (Slide-in from right) -->
   <div class="cart-overlay" id="cartOverlay" onclick="closeCartPanel()"></div>
   <div class="cart-panel" id="cartPanel">
@@ -1284,15 +1355,39 @@
         <!-- Checkout Summary -->
         <div class="calculation-summary-box">
           <div class="calc-row">
-            <span>Cart Total:</span>
-            <strong id="checkoutTotal" class="text-purple">₹0</strong>
+            <span>Subtotal Amount:</span>
+            <strong id="checkoutSubtotal">₹0</strong>
           </div>
           <div class="calc-row">
-            <span>Loyalty Points Earned:</span>
-            <strong id="checkoutPoints" class="text-gold">+0 Points</strong>
+            <span>Available Points:</span>
+            <strong id="checkoutAvailablePoints" style="color:var(--gold);">0 pts</strong>
+          </div>
+          <div class="calc-row">
+            <span>Automatically Applied Reward:</span>
+            <strong id="checkoutDiscount" style="color:#10b981;">No reward available yet</strong>
+          </div>
+          <div class="calc-row">
+            <span>Points Redeemed:</span>
+            <strong id="checkoutPointsRedeemed" style="color:var(--text-muted);">0 pts</strong>
+          </div>
+          <div class="calc-row">
+            <span>Final Payable Amount:</span>
+            <strong id="checkoutTotal" class="text-purple" style="font-size:15px;">₹0</strong>
+          </div>
+          <div class="calc-row">
+            <span>Current Purchase Points Earned:</span>
+            <strong id="checkoutPoints" style="color:var(--gold);">+0 Points</strong>
+          </div>
+          <div class="calc-row">
+            <span>Remaining Points Balance:</span>
+            <strong id="checkoutRemainingPoints" class="text-purple">0 pts</strong>
+          </div>
+          <div class="calc-row" id="checkoutTierRow" style="display:none;">
+            <span>Projected Membership:</span>
+            <strong id="checkoutProjectedTier" class="text-purple">Bronze</strong>
           </div>
           <div class="calc-note">
-            <i class="fa-solid fa-lightbulb"></i> Points Formula: Math.floor(Amount / 500) * 10
+            <i class="fa-solid fa-lightbulb"></i> Points Formula: ₹500 spending = 10 pts (calculated on final payable amount)
           </div>
         </div>
 

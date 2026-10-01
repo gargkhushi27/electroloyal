@@ -1,4 +1,4 @@
-# Production Dockerfile for ELECTROLOYAL on Railway
+# Production Dockerfile for Gadget Grid on Railway
 FROM node:22-slim
 
 WORKDIR /app
