@@ -34,6 +34,9 @@
           <li class="nav-item" data-page="products">
             <a href="#"><i class="fa-solid fa-box-open"></i> <span>Products</span></a>
           </li>
+          <li class="nav-item" data-page="cart" onclick="openCartPanel(); return false;">
+            <a href="#"><i class="fa-solid fa-cart-shopping"></i> <span>Cart</span> <span class="sidebar-cart-badge" id="sidebarCartBadge">0</span></a>
+          </li>
           <li class="nav-item" data-page="membership">
             <a href="#"><i class="fa-solid fa-crown"></i> <span>Membership</span></a>
           </li>
@@ -42,6 +45,12 @@
           </li>
           <li class="nav-item" data-page="transactions">
             <a href="#"><i class="fa-solid fa-receipt"></i> <span>Transactions</span></a>
+          </li>
+          <li class="nav-item" data-page="analytics">
+            <a href="#"><i class="fa-solid fa-chart-line"></i> <span>Analytics</span></a>
+          </li>
+          <li class="nav-item" data-page="settings">
+            <a href="#"><i class="fa-solid fa-gear"></i> <span>Settings</span></a>
           </li>
         </ul>
       </nav>
@@ -64,18 +73,37 @@
     <main class="main-content">
       <!-- TOP HEADER -->
       <header class="top-header">
-        <div class="header-title">
-          <h1 id="headerTitle">Dashboard</h1>
-          <p id="headerSubtitle">Overview of store sales, customer loyalty, and rewards</p>
+        <div class="header-left-col">
+          <div class="header-global-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="globalSearchInput" placeholder="Search customers, products, transactions..." autocomplete="off">
+            <div class="global-search-results" id="globalSearchResults"></div>
+          </div>
         </div>
         <div class="header-actions">
-          <div class="header-icon-btn notification-btn" title="Notifications">
+          <button class="header-icon-btn notification-btn" title="Notifications">
             <i class="fa-regular fa-bell"></i>
             <span class="badge-dot"></span>
-          </div>
-          <div class="user-profile">
-            <div class="admin-avatar-circle"><i class="fa-solid fa-user"></i></div>
-            <span>Store Manager</span>
+          </button>
+          <div class="user-profile dropdown-trigger" id="userProfileDropdownTrigger" tabindex="0">
+            <div class="admin-avatar-circle"><i class="fa-solid fa-user-tie"></i></div>
+            <div class="user-meta-text">
+              <span class="user-name">Store Manager</span>
+              <span class="user-role-badge">Admin</span>
+            </div>
+            <i class="fa-solid fa-chevron-down user-dropdown-caret"></i>
+            <div class="user-profile-dropdown" id="userProfileDropdown">
+              <div class="dropdown-header">
+                <strong>Store Manager</strong>
+                <small>admin@electroloyal.com</small>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a href="#" onclick="navigateTo('analytics'); return false;"><i class="fa-solid fa-chart-line"></i> Store Analytics</a>
+              <a href="#" onclick="navigateTo('membership'); return false;"><i class="fa-solid fa-crown"></i> Membership Policy</a>
+              <a href="#" onclick="openModal('backupModal'); return false;"><i class="fa-solid fa-database"></i> Backup / Restore</a>
+              <div class="dropdown-divider"></div>
+              <a href="#" onclick="alert('Session active as Store Manager'); return false;" class="text-danger"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</a>
+            </div>
           </div>
         </div>
       </header>
@@ -84,87 +112,339 @@
 
       <!-- 1. DASHBOARD VIEW -->
       <section id="view-dashboard" class="page-view active">
-        <!-- CLEAN STORE OVERVIEW HERO / WELCOME AREA -->
-        <div class="store-overview-banner">
-          <div class="store-overview-content">
-            <div class="store-badge-pill">
-              <span class="store-status-dot"></span>
-              <span>ELECTRONICS RETAIL MANAGEMENT</span>
+        <!-- LARGE 3D ELECTRONICS HERO / WELCOME SECTION -->
+        <div class="dashboard-hero-card" id="dashboardHeroStage">
+          <div class="hero-bg-accent"></div>
+          <div class="hero-grid-pattern"></div>
+          <div class="hero-welcome-left">
+            <div class="hero-status-pill">
+              <span class="status-indicator-dot"></span>
+              <span>LIVE RETAIL TELEMETRY &bull; PRO</span>
             </div>
-            <h1 class="store-overview-title">Store Overview</h1>
-            <p class="store-overview-subtitle">Manage customers, purchases, products and loyalty rewards.</p>
-            
-            <div class="store-overview-actions">
-              <button class="btn btn-primary" onclick="openAddPurchaseModal()">
+            <h1 class="hero-heading">Welcome Back,<br><span class="hero-heading-gradient">Store Manager!</span></h1>
+            <p class="hero-description">Manage customers, purchases, loyalty points and rewards &mdash; all in one place with automated tier promotions and instant calculations.</p>
+            <div class="hero-btn-group">
+              <button class="btn btn-primary btn-hero-action" onclick="openAddPurchaseModal()">
                 <i class="fa-solid fa-cart-plus"></i> Record Purchase
               </button>
-              <button class="btn btn-secondary" onclick="openAddCustomerModal()">
+              <button class="btn btn-secondary btn-hero-action" onclick="openAddCustomerModal()">
                 <i class="fa-solid fa-user-plus"></i> Add Customer
               </button>
-              <button class="btn btn-secondary" onclick="navigateTo('products')">
-                <i class="fa-solid fa-box-open"></i> View Catalogue
+              <button class="btn btn-secondary btn-hero-action" onclick="navigateTo('products')">
+                <i class="fa-solid fa-box-open"></i> Catalogue
               </button>
             </div>
+            <div class="hero-quick-indicators">
+              <div class="hero-ind-item">
+                <i class="fa-solid fa-bolt text-purple"></i>
+                <div>
+                  <small>Points Formula</small>
+                  <strong>10 pts / ₹500</strong>
+                </div>
+              </div>
+              <div class="hero-ind-divider"></div>
+              <div class="hero-ind-item">
+                <i class="fa-solid fa-crown text-gold"></i>
+                <div>
+                  <small>Diamond Threshold</small>
+                  <strong>₹10,000+ Spent</strong>
+                </div>
+              </div>
+              <div class="hero-ind-divider"></div>
+              <div class="hero-ind-item">
+                <i class="fa-solid fa-shield-halved text-cyan"></i>
+                <div>
+                  <small>Auto Tier Engine</small>
+                  <strong class="text-success">Active 100%</strong>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="store-overview-quickpills">
-            <div class="quickpill-card">
-              <span class="quickpill-label"><i class="fa-solid fa-coins text-accent"></i> Points Formula</span>
-              <span class="quickpill-val">10 pts / ₹500</span>
-            </div>
-            <div class="quickpill-card">
-              <span class="quickpill-label"><i class="fa-solid fa-crown text-gold"></i> Top Tier</span>
-              <span class="quickpill-val">Diamond (₹10,000+)</span>
-            </div>
-            <div class="quickpill-card">
-              <span class="quickpill-label"><i class="fa-solid fa-layer-group text-accent"></i> Inventory</span>
-              <span class="quickpill-val">35 Electronics</span>
+          <!-- 3D ELECTRONICS VISUAL STAGE (with mouse parallax) -->
+          <div class="hero-stage-right" id="hero3DInteractiveScene">
+            <div class="scene-3d-wrapper">
+              <!-- Holographic Glow Halo -->
+              <div class="scene-glow-disc"></div>
+              <div class="scene-circuit-rings"></div>
+
+              <!-- Main Floating Flagship Device (Laptop/Tablet) -->
+              <div class="scene-layer layer-laptop" data-depth="0.04">
+                <div class="tech-device-card device-main">
+                  <div class="device-specular-highlight"></div>
+                  <div class="device-card-top">
+                    <span class="device-badge"><i class="fa-solid fa-microchip"></i> Flagship</span>
+                    <span class="device-pill-stock">In Stock</span>
+                  </div>
+                  <div class="device-img-holder">
+                    <img src="images/products/novabook-14-pro.svg" alt="NovaBook 14 Pro" class="device-preview-img">
+                  </div>
+                  <div class="device-info-bar">
+                    <div>
+                      <h4>NovaBook 14 Pro</h4>
+                      <span class="device-price-tag">₹69,999</span>
+                    </div>
+                    <span class="device-pts-badge"><i class="fa-solid fa-coins"></i> +1,390 pts</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Floating Smartphone Element -->
+              <div class="scene-layer layer-phone" data-depth="0.08">
+                <div class="floating-device-orb orb-phone">
+                  <img src="images/products/nova-x1-pro.svg" alt="Nova X1 Pro">
+                  <div class="orb-meta">
+                    <strong>Nova X1</strong>
+                    <small>₹34,999</small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Floating Wireless Headphones / Earbuds -->
+              <div class="scene-layer layer-audio" data-depth="0.06">
+                <div class="floating-device-orb orb-audio">
+                  <img src="images/products/soundpods-pro.svg" alt="SoundPods Pro">
+                  <div class="orb-badge">+50 pts</div>
+                </div>
+              </div>
+
+              <!-- Floating Smartwatch -->
+              <div class="scene-layer layer-watch" data-depth="0.05">
+                <div class="floating-device-orb orb-watch">
+                  <img src="images/products/smartwatch-ultra.svg" alt="SmartWatch Ultra">
+                </div>
+              </div>
+
+              <!-- Floating 3D Loyalty Coin / Chip -->
+              <div class="scene-layer layer-coin" data-depth="0.10">
+                <div class="floating-loyalty-coin">
+                  <div class="coin-inner">
+                    <i class="fa-solid fa-coins"></i>
+                    <span>+10</span>
+                    <small>PTS</small>
+                  </div>
+                  <div class="coin-sheen"></div>
+                </div>
+              </div>
+
+              <!-- Floating VIP Diamond Chip -->
+              <div class="scene-layer layer-vip" data-depth="0.07">
+                <div class="floating-vip-chip">
+                  <i class="fa-solid fa-gem text-cyan"></i>
+                  <div>
+                    <strong>Diamond VIP</strong>
+                    <small>Auto Tier Active</small>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Dynamic Glass-Style Stat Cards -->
-        <div class="stats-grid">
-          <div class="stat-card glass-card">
-            <div class="stat-icon purple"><i class="fa-solid fa-users"></i></div>
+        <!-- 4 KPI CARDS -->
+        <div class="stats-grid mb-4">
+          <div class="stat-card glass-card kpi-card-enhanced">
+            <div class="stat-icon-wrap purple-glow">
+              <i class="fa-solid fa-users"></i>
+            </div>
             <div class="stat-details">
-              <h3>Total Customers</h3>
-              <p class="stat-value" id="dashTotalCustomers">0</p>
-              <span class="stat-desc"><i class="fa-solid fa-arrow-up text-success"></i> Active members</span>
+              <span class="kpi-label">TOTAL CUSTOMERS</span>
+              <div class="kpi-value-row">
+                <h3 class="stat-value" id="dashTotalCustomers">0</h3>
+                <span class="trend-badge trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +12%</span>
+              </div>
+              <div class="kpi-sparkline-row">
+                <svg class="kpi-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                  <path d="M0,18 Q20,14 40,16 T70,8 T100,4" fill="none" stroke="#6D5DFB" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <span class="stat-desc">Active members</span>
+              </div>
             </div>
           </div>
-          <div class="stat-card glass-card">
-            <div class="stat-icon gold"><i class="fa-solid fa-coins"></i></div>
+
+          <div class="stat-card glass-card kpi-card-enhanced">
+            <div class="stat-icon-wrap gold-glow">
+              <i class="fa-solid fa-coins"></i>
+            </div>
             <div class="stat-details">
-              <h3>Total Points Issued</h3>
-              <p class="stat-value" id="dashTotalPoints">0</p>
-              <span class="stat-desc">₹500 spent = 10 pts</span>
+              <span class="kpi-label">TOTAL POINTS ISSUED</span>
+              <div class="kpi-value-row">
+                <h3 class="stat-value" id="dashTotalPoints">0</h3>
+                <span class="trend-badge trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +18%</span>
+              </div>
+              <div class="kpi-sparkline-row">
+                <svg class="kpi-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                  <path d="M0,20 Q25,12 50,15 T75,6 T100,2" fill="none" stroke="#D97706" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <span class="stat-desc">₹500 spent = 10 pts</span>
+              </div>
             </div>
           </div>
-          <div class="stat-card glass-card">
-            <div class="stat-icon green"><i class="fa-solid fa-gift"></i></div>
+
+          <div class="stat-card glass-card kpi-card-enhanced">
+            <div class="stat-icon-wrap blue-glow">
+              <i class="fa-solid fa-indian-rupee-sign"></i>
+            </div>
             <div class="stat-details">
-              <h3>Active Rewards</h3>
-              <p class="stat-value" id="dashActiveRewards">0</p>
-              <span class="stat-desc">Unlocked for members</span>
+              <span class="kpi-label">TOTAL SALES</span>
+              <div class="kpi-value-row">
+                <h3 class="stat-value" id="dashTotalSales">₹0</h3>
+                <span class="trend-badge trend-up"><i class="fa-solid fa-arrow-trend-up"></i> +24%</span>
+              </div>
+              <div class="kpi-sparkline-row">
+                <svg class="kpi-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                  <path d="M0,16 Q20,18 40,10 T70,12 T100,3" fill="none" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <span class="stat-desc">Lifetime revenue</span>
+              </div>
             </div>
           </div>
-          <div class="stat-card glass-card">
-            <div class="stat-icon blue"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+
+          <div class="stat-card glass-card kpi-card-enhanced">
+            <div class="stat-icon-wrap cyan-glow">
+              <i class="fa-solid fa-gem"></i>
+            </div>
             <div class="stat-details">
-              <h3>Total Sales</h3>
-              <p class="stat-value" id="dashTotalSales">₹0</p>
-              <span class="stat-desc">Lifetime revenue</span>
+              <span class="kpi-label">DIAMOND MEMBERS</span>
+              <div class="kpi-value-row">
+                <h3 class="stat-value" id="dashDiamondCount">0</h3>
+                <span class="trend-badge trend-up"><i class="fa-solid fa-crown"></i> VIP</span>
+              </div>
+              <div class="kpi-sparkline-row">
+                <svg class="kpi-sparkline" viewBox="0 0 100 24" preserveAspectRatio="none">
+                  <path d="M0,18 Q30,12 60,14 T100,5" fill="none" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <span class="stat-desc">₹10,000+ tier</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Middle Grid: Recent Activity & Membership Distribution -->
+        <!-- SALES OVERVIEW + MEMBERSHIP DISTRIBUTION -->
         <div class="dashboard-grid mb-4">
-          <!-- Recent Activity -->
+          <!-- Sales Overview Large Card with Trend Graph -->
           <div class="card grid-col-8 glass-card">
             <div class="card-header">
-              <h2><i class="fa-solid fa-clock-rotate-left text-purple"></i> Recent Customer Activity</h2>
+              <div>
+                <h2><i class="fa-solid fa-chart-line text-purple"></i> Sales & Transaction Overview</h2>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Monthly sales trends computed directly from customer transactions</p>
+              </div>
+              <div class="sales-overview-header-actions">
+                <span class="badge-cat"><i class="fa-solid fa-circle-check text-success"></i> Real-time</span>
+              </div>
+            </div>
+
+            <div class="sales-chart-wrapper">
+              <div class="sales-chart-metrics-strip">
+                <div class="strip-metric">
+                  <small>AVERAGE ORDER VALUE</small>
+                  <strong id="dashAvgOrderValue">₹0</strong>
+                </div>
+                <div class="strip-metric">
+                  <small>COMPLETED TRANSACTIONS</small>
+                  <strong id="dashTxnCount">0</strong>
+                </div>
+                <div class="strip-metric">
+                  <small>AVG POINTS / PURCHASE</small>
+                  <strong id="dashAvgPoints" class="text-gold">+0 pts</strong>
+                </div>
+              </div>
+
+              <!-- Real Dynamic Sales Trend Chart (SVG) -->
+              <div class="sales-svg-chart-container" id="salesSvgChartContainer">
+                <svg id="salesOverviewSvg" viewBox="0 0 600 180" class="sales-trend-svg">
+                  <!-- Generated dynamically in script.js -->
+                </svg>
+              </div>
+              <div class="sales-month-labels-row" id="salesMonthLabelsRow">
+                <!-- Dynamically populated month tags -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Membership Distribution Donut Card -->
+          <div class="card grid-col-4 glass-card">
+            <div class="card-header">
+              <div>
+                <h2><i class="fa-solid fa-chart-pie text-purple"></i> Membership Share</h2>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Spending-based customer distribution</p>
+              </div>
+            </div>
+
+            <!-- Modern Donut Chart with Centered Total -->
+            <div class="donut-chart-container">
+              <div class="donut-svg-wrap">
+                <svg viewBox="0 0 160 160" class="donut-ring-svg">
+                  <circle cx="80" cy="80" r="60" fill="none" stroke="#EEF2F6" stroke-width="16" />
+                  <circle id="donutSegmentBronze" cx="80" cy="80" r="60" fill="none" stroke="#D97706" stroke-width="16" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 80 80)" stroke-linecap="round"/>
+                  <circle id="donutSegmentSilver" cx="80" cy="80" r="60" fill="none" stroke="#64748B" stroke-width="16" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 80 80)" stroke-linecap="round"/>
+                  <circle id="donutSegmentGold" cx="80" cy="80" r="60" fill="none" stroke="#EAB308" stroke-width="16" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 80 80)" stroke-linecap="round"/>
+                  <circle id="donutSegmentDiamond" cx="80" cy="80" r="60" fill="none" stroke="#06B6D4" stroke-width="16" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 80 80)" stroke-linecap="round"/>
+                </svg>
+                <div class="donut-center-info">
+                  <span class="donut-center-val" id="donutTotalMembers">0</span>
+                  <small>Customers</small>
+                </div>
+              </div>
+
+              <!-- Tier Legend Items -->
+              <div class="donut-legend-list">
+                <div class="donut-legend-item">
+                  <div class="legend-dot" style="background:#D97706;"></div>
+                  <span class="legend-title">Bronze</span>
+                  <span class="legend-spending">₹0-₹2.5k</span>
+                  <strong class="legend-count" id="countBronze">0</strong>
+                  <small class="legend-pct" id="pctBronze">0%</small>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="legend-dot" style="background:#64748B;"></div>
+                  <span class="legend-title">Silver</span>
+                  <span class="legend-spending">₹2.5k-₹5k</span>
+                  <strong class="legend-count" id="countSilver">0</strong>
+                  <small class="legend-pct" id="pctSilver">0%</small>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="legend-dot" style="background:#EAB308;"></div>
+                  <span class="legend-title">Gold</span>
+                  <span class="legend-spending">₹5k-₹10k</span>
+                  <strong class="legend-count" id="countGold">0</strong>
+                  <small class="legend-pct" id="pctGold">0%</small>
+                </div>
+                <div class="donut-legend-item">
+                  <div class="legend-dot" style="background:#06B6D4;"></div>
+                  <span class="legend-title">Diamond</span>
+                  <span class="legend-spending">₹10k+</span>
+                  <strong class="legend-count" id="countDiamond">0</strong>
+                  <small class="legend-pct" id="pctDiamond">0%</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOP SELLING PRODUCTS + RECENT TRANSACTIONS -->
+        <div class="dashboard-grid mb-4">
+          <!-- Top Selling Products Section -->
+          <div class="card grid-col-6 glass-card">
+            <div class="card-header">
+              <div>
+                <h2><i class="fa-solid fa-fire text-gold"></i> Top Selling Electronics</h2>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Top ranked electronics products by store demand</p>
+              </div>
+              <button class="btn-link" onclick="navigateTo('products')">View All (35)</button>
+            </div>
+            <div class="top-selling-products-grid" id="dashTopSellingProductsGrid">
+              <!-- Dynamically populated product cards with 3D hover -->
+            </div>
+          </div>
+
+          <!-- Recent Customer Transactions -->
+          <div class="card grid-col-6 glass-card">
+            <div class="card-header">
+              <div>
+                <h2><i class="fa-solid fa-clock-rotate-left text-purple"></i> Recent Transactions</h2>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Real-time checkout and loyalty logs</p>
+              </div>
               <button class="btn-link" onclick="navigateTo('transactions')">View All</button>
             </div>
             <div class="table-responsive">
@@ -179,98 +459,102 @@
                   </tr>
                 </thead>
                 <tbody id="dashRecentActivityTable">
-                  <!-- Dynamic Rows -->
+                  <!-- Dynamic Rows with customer avatars & highlighted points -->
                 </tbody>
               </table>
             </div>
           </div>
-
-          <!-- Membership Distribution -->
-          <div class="card grid-col-4 glass-card">
-            <div class="card-header">
-              <h2><i class="fa-solid fa-chart-bar text-purple"></i> Membership Tiers</h2>
-            </div>
-            <div class="membership-distribution">
-              <div class="dist-item">
-                <div class="dist-info">
-                  <span class="tier-badge bronze"><i class="fa-solid fa-shield"></i> Bronze</span>
-                  <span id="countBronze">0</span>
-                </div>
-                <div class="dist-bar"><div id="barBronze" class="dist-fill bronze" style="width: 0%"></div></div>
-              </div>
-
-              <div class="dist-item">
-                <div class="dist-info">
-                  <span class="tier-badge silver"><i class="fa-solid fa-shield-halved"></i> Silver</span>
-                  <span id="countSilver">0</span>
-                </div>
-                <div class="dist-bar"><div id="barSilver" class="dist-fill silver" style="width: 0%"></div></div>
-              </div>
-
-              <div class="dist-item">
-                <div class="dist-info">
-                  <span class="tier-badge gold"><i class="fa-solid fa-crown"></i> Gold</span>
-                  <span id="countGold">0</span>
-                </div>
-                <div class="dist-bar"><div id="barGold" class="dist-fill gold" style="width: 0%"></div></div>
-              </div>
-
-              <div class="dist-item">
-                <div class="dist-info">
-                  <span class="tier-badge diamond"><i class="fa-solid fa-gem"></i> Diamond</span>
-                  <span id="countDiamond">0</span>
-                </div>
-                <div class="dist-bar"><div id="barDiamond" class="dist-fill diamond" style="width: 0%"></div></div>
-              </div>
-            </div>
-
-            <div class="rule-box mt-4">
-              <h4><i class="fa-solid fa-circle-info text-purple"></i> Spending Tiers</h4>
-              <p>Bronze: ₹0 – ₹2,499</p>
-              <p>Silver: ₹2,500 – ₹4,999</p>
-              <p>Gold: ₹5,000 – ₹9,999</p>
-              <p>Diamond: ₹10,000+</p>
-            </div>
-          </div>
         </div>
 
-        <!-- Lower Grid: Sales & Velocity Analytics + Top Electronics Showcase -->
-        <div class="dashboard-grid">
-          <!-- Sales Visualization -->
-          <div class="card grid-col-6 glass-card">
+        <!-- ADDITIONAL LOYALTY ANALYTICS + QUICK ACTIONS -->
+        <div class="dashboard-grid mb-4">
+          <!-- Loyalty Analytics SaaS Card -->
+          <div class="card grid-col-8 glass-card">
             <div class="card-header">
-              <h2><i class="fa-solid fa-chart-line text-purple"></i> Retail Sales & Velocity</h2>
-              <span class="badge-cat"><i class="fa-solid fa-circle-check text-success"></i> Real-time</span>
+              <div>
+                <h2><i class="fa-solid fa-chart-column text-purple"></i> Loyalty Performance Metrics</h2>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">Key customer retention & spending indicators</p>
+              </div>
+              <button class="btn-link" onclick="navigateTo('analytics')">Detailed Report</button>
             </div>
-            <div class="sales-analytics-body">
-              <div class="analytics-metrics-row">
-                <div class="metric-item">
-                  <span class="metric-label">Avg Transaction</span>
-                  <strong class="metric-value text-purple" id="dashAvgOrderValue">₹0</strong>
-                </div>
-                <div class="metric-item">
-                  <span class="metric-label">Total Completed</span>
-                  <strong class="metric-value text-dark" id="dashTxnCount">0</strong>
-                </div>
-                <div class="metric-item">
-                  <span class="metric-label">Avg Points / Txn</span>
-                  <strong class="metric-value text-gold" id="dashAvgPoints">+0 pts</strong>
+            <div class="loyalty-metrics-row-cards">
+              <div class="loyalty-sub-metric-card">
+                <div class="sub-metric-icon"><i class="fa-solid fa-user-check text-purple"></i></div>
+                <div>
+                  <small>Active Customer Retention</small>
+                  <strong id="dashLoyaltyRetention">100%</strong>
+                  <span class="sub-stat-note text-success"><i class="fa-solid fa-check"></i> 100% profile match</span>
                 </div>
               </div>
+              <div class="loyalty-sub-metric-card">
+                <div class="sub-metric-icon"><i class="fa-solid fa-gift text-gold"></i></div>
+                <div>
+                  <small>Unlocked Reward Perks</small>
+                  <strong id="dashActiveRewards">0</strong>
+                  <span class="sub-stat-note">Available to claim</span>
+                </div>
+              </div>
+              <div class="loyalty-sub-metric-card">
+                <div class="sub-metric-icon"><i class="fa-solid fa-receipt text-blue"></i></div>
+                <div>
+                  <small>Lifetime Revenue Logged</small>
+                  <strong id="dashLifetimeRevenueSmall">₹0</strong>
+                  <span class="sub-stat-note text-purple"><i class="fa-solid fa-coins"></i> Verified ledger</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category Volume Breakdown -->
+            <div class="category-volume-section mt-4">
+              <h4 style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text-dark);">Category Sales Distribution</h4>
               <div class="sales-bars-visual" id="dashSalesBarsVisual">
                 <!-- Dynamic Category Volume Bars -->
               </div>
             </div>
           </div>
 
-          <!-- Top Electronics Showcase -->
-          <div class="card grid-col-6 glass-card">
+          <!-- Quick Actions Card -->
+          <div class="card grid-col-4 glass-card">
             <div class="card-header">
-              <h2><i class="fa-solid fa-fire text-gold"></i> Featured Electronics</h2>
-              <button class="btn-link" onclick="navigateTo('products')">View All (35)</button>
+              <h2><i class="fa-solid fa-bolt text-gold"></i> Quick Actions</h2>
             </div>
-            <div class="top-products-list" id="dashTopProductsList">
-              <!-- Dynamic Top Products -->
+            <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:18px;">Fast access to store operations and customer loyalty tasks.</p>
+            <div class="quick-actions-list">
+              <button class="quick-action-btn" onclick="openAddPurchaseModal()">
+                <div class="qa-icon" style="background:var(--purple-bg);color:var(--purple);"><i class="fa-solid fa-cart-plus"></i></div>
+                <div class="qa-content">
+                  <strong>Record Purchase</strong>
+                  <small>Log checkout & calculate points</small>
+                </div>
+                <i class="fa-solid fa-chevron-right qa-arrow"></i>
+              </button>
+
+              <button class="quick-action-btn" onclick="openAddCustomerModal()">
+                <div class="qa-icon" style="background:#D1FAE5;color:var(--success);"><i class="fa-solid fa-user-plus"></i></div>
+                <div class="qa-content">
+                  <strong>Add Customer</strong>
+                  <small>Register Name & Phone ID</small>
+                </div>
+                <i class="fa-solid fa-chevron-right qa-arrow"></i>
+              </button>
+
+              <button class="quick-action-btn" onclick="navigateTo('products')">
+                <div class="qa-icon" style="background:#FEF3C7;color:var(--bronze);"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <div class="qa-content">
+                  <strong>Manage Products</strong>
+                  <small>Catalogue, prices & stock</small>
+                </div>
+                <i class="fa-solid fa-chevron-right qa-arrow"></i>
+              </button>
+
+              <button class="quick-action-btn" onclick="navigateTo('rewards')">
+                <div class="qa-icon" style="background:#E0F2FE;color:#0284C7;"><i class="fa-solid fa-gift"></i></div>
+                <div class="qa-content">
+                  <strong>View Rewards</strong>
+                  <small>Perks and tier vouchers</small>
+                </div>
+                <i class="fa-solid fa-chevron-right qa-arrow"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -661,6 +945,78 @@
                 <!-- Dynamic Transaction Rows -->
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. ANALYTICS VIEW -->
+      <section id="view-analytics" class="page-view">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-chart-line text-purple"></i> Customer & Loyalty Analytics</h2>
+            <button class="btn btn-secondary btn-sm" onclick="renderAnalyticsView()"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+          </div>
+          <p style="color:var(--text-muted);font-size:13.5px;margin-bottom:20px;">Comprehensive performance metrics across customer loyalty tiers, point earnings, sales volume, and transaction velocity.</p>
+          <div class="analytics-stat-grid" id="analyticsSummaryGrid">
+            <!-- Dynamic analytics metrics -->
+          </div>
+        </div>
+
+        <div class="dashboard-grid mb-4">
+          <div class="card grid-col-8">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-chart-area text-purple"></i> Revenue & Loyalty Points Velocity</h2>
+            </div>
+            <div id="analyticsDetailedTrends" class="analytics-trends-box"></div>
+          </div>
+          <div class="card grid-col-4">
+            <div class="card-header">
+              <h2><i class="fa-solid fa-circle-nodes text-purple"></i> Tier Share</h2>
+            </div>
+            <div id="analyticsTierBreakdown" class="analytics-tier-breakdown"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. SETTINGS VIEW -->
+      <section id="view-settings" class="page-view">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-sliders text-purple"></i> Loyalty Program Configuration</h2>
+          </div>
+          <div class="settings-grid">
+            <div class="setting-item">
+              <div>
+                <strong>Point Earning Ratio</strong>
+                <p style="color:var(--text-muted);font-size:12px;">Standard points issued per purchase interval.</p>
+              </div>
+              <span class="badge-cat" style="font-size:13px;padding:4px 10px;">10 pts / ₹500</span>
+            </div>
+            <div class="setting-item">
+              <div>
+                <strong>Customer Identifier Mode</strong>
+                <p style="color:var(--text-muted);font-size:12px;">Primary lookup key for existing customer identification.</p>
+              </div>
+              <span class="tier-badge gold" style="font-size:12px;">Phone Number &bull; ID</span>
+            </div>
+            <div class="setting-item">
+              <div>
+                <strong>Automated Tier Upgrades</strong>
+                <p style="color:var(--text-muted);font-size:12px;">Upgrades calculate automatically upon transaction completion.</p>
+              </div>
+              <span class="stock-badge in-stock"><i class="fa-solid fa-check-circle"></i> Active</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2><i class="fa-solid fa-database text-purple"></i> Data Management</h2>
+          </div>
+          <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Export backup archive or restore local storage database.</p>
+          <div style="display:flex;gap:12px;">
+            <button class="btn btn-primary" onclick="exportData()"><i class="fa-solid fa-download"></i> Export Data Backup</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('importFileInput').click()"><i class="fa-solid fa-upload"></i> Restore Backup</button>
           </div>
         </div>
       </section>
