@@ -116,22 +116,21 @@
         <div class="dashboard-hero-card" id="dashboardHeroStage">
           <div class="hero-bg-accent"></div>
           <div class="hero-grid-pattern"></div>
+          
+          <!-- LEFT SIDE: Welcome Text & Primary Action Buttons -->
           <div class="hero-welcome-left">
             <div class="hero-status-pill">
               <span class="status-indicator-dot"></span>
               <span>LIVE RETAIL TELEMETRY &bull; PRO</span>
             </div>
-            <h1 class="hero-heading">Welcome Back,<br><span class="hero-heading-gradient">Store Manager!</span></h1>
-            <p class="hero-description">Manage customers, purchases, loyalty points and rewards &mdash; all in one place with automated tier promotions and instant calculations.</p>
+            <h1 class="hero-heading">Welcome Back,<br><span class="hero-heading-gradient">Store Manager! 👋</span></h1>
+            <p class="hero-description">Manage customers, purchases, loyalty points and rewards — all in one place.</p>
             <div class="hero-btn-group">
               <button class="btn btn-primary btn-hero-action" onclick="openAddPurchaseModal()">
                 <i class="fa-solid fa-cart-plus"></i> Record Purchase
               </button>
               <button class="btn btn-secondary btn-hero-action" onclick="openAddCustomerModal()">
                 <i class="fa-solid fa-user-plus"></i> Add Customer
-              </button>
-              <button class="btn btn-secondary btn-hero-action" onclick="navigateTo('products')">
-                <i class="fa-solid fa-box-open"></i> Catalogue
               </button>
             </div>
             <div class="hero-quick-indicators">
@@ -161,62 +160,72 @@
             </div>
           </div>
 
-          <!-- 3D ELECTRONICS VISUAL STAGE (with mouse parallax) -->
+          <!-- RIGHT SIDE: PREMIUM 3D ELECTRONICS COMPOSITION (Phone + Laptop + Headphones + Watch + Earbuds) -->
           <div class="hero-stage-right" id="hero3DInteractiveScene">
             <div class="scene-3d-wrapper">
-              <!-- Holographic Glow Halo -->
+              <!-- Radial Glow and Aura -->
               <div class="scene-glow-disc"></div>
               <div class="scene-circuit-rings"></div>
 
-              <!-- Main Floating Flagship Device (Laptop/Tablet) -->
-              <div class="scene-layer layer-laptop" data-depth="0.04">
-                <div class="tech-device-card device-main">
-                  <div class="device-specular-highlight"></div>
-                  <div class="device-card-top">
-                    <span class="device-badge"><i class="fa-solid fa-microchip"></i> Flagship</span>
-                    <span class="device-pill-stock">In Stock</span>
-                  </div>
-                  <div class="device-img-holder">
-                    <img src="images/products/novabook-14-pro.svg" alt="NovaBook 14 Pro" class="device-preview-img">
-                  </div>
-                  <div class="device-info-bar">
-                    <div>
-                      <h4>NovaBook 14 Pro</h4>
-                      <span class="device-price-tag">₹69,999</span>
-                    </div>
-                    <span class="device-pts-badge"><i class="fa-solid fa-coins"></i> +1,390 pts</span>
+              <!-- 1. LAPTOP (Center-Back Anchor) -->
+              <div class="scene-layer layer-laptop-product" data-depth="0.03">
+                <div class="product-render-wrap laptop-render">
+                  <img src="images/hero/hero-laptop.svg" alt="Flagship Laptop 3D Render" class="render-img">
+                  <div class="render-specular-sheen"></div>
+                  <div class="render-floating-tag tag-laptop">
+                    <span>NovaBook 14 Pro</span>
+                    <strong>₹69,999</strong>
                   </div>
                 </div>
               </div>
 
-              <!-- Floating Smartphone Element -->
-              <div class="scene-layer layer-phone" data-depth="0.08">
-                <div class="floating-device-orb orb-phone">
-                  <img src="images/products/nova-x1-pro.svg" alt="Nova X1 Pro">
-                  <div class="orb-meta">
-                    <strong>Nova X1</strong>
-                    <small>₹34,999</small>
+              <!-- 2. SMARTPHONE (Front-Left Overlapping Laptop) -->
+              <div class="scene-layer layer-phone-product" data-depth="0.08">
+                <div class="product-render-wrap phone-render">
+                  <img src="images/hero/hero-phone.svg" alt="Flagship Smartphone 3D Render" class="render-img">
+                  <div class="render-specular-sheen"></div>
+                  <div class="render-floating-tag tag-phone">
+                    <span>Nova X1 Pro</span>
+                    <strong>₹34,999</strong>
                   </div>
                 </div>
               </div>
 
-              <!-- Floating Wireless Headphones / Earbuds -->
-              <div class="scene-layer layer-audio" data-depth="0.06">
-                <div class="floating-device-orb orb-audio">
-                  <img src="images/products/soundpods-pro.svg" alt="SoundPods Pro">
-                  <div class="orb-badge">+50 pts</div>
+              <!-- 3. OVER-EAR HEADPHONES (Back-Right Floating Depth) -->
+              <div class="scene-layer layer-headphones-product" data-depth="0.05">
+                <div class="product-render-wrap headphones-render">
+                  <img src="images/hero/hero-headphones.svg" alt="Wireless Over-Ear Headphones 3D Render" class="render-img">
+                  <div class="render-floating-tag tag-headphones">
+                    <span>AirBeat Max Pro</span>
+                    <strong>₹7,999</strong>
+                  </div>
                 </div>
               </div>
 
-              <!-- Floating Smartwatch -->
-              <div class="scene-layer layer-watch" data-depth="0.05">
-                <div class="floating-device-orb orb-watch">
-                  <img src="images/products/smartwatch-ultra.svg" alt="SmartWatch Ultra">
+              <!-- 4. SMARTWATCH (Foreground-Right Side) -->
+              <div class="scene-layer layer-watch-product" data-depth="0.09">
+                <div class="product-render-wrap watch-render">
+                  <img src="images/hero/hero-smartwatch.svg" alt="SmartWatch Ultra 3D Render" class="render-img">
+                  <div class="render-floating-tag tag-watch">
+                    <span>SmartWatch Ultra</span>
+                    <strong>₹9,999</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5. WIRELESS EARBUDS & CASE (Foreground-Center Floating) -->
+              <div class="scene-layer layer-earbuds-product" data-depth="0.07">
+                <div class="product-render-wrap earbuds-render">
+                  <img src="images/hero/hero-earbuds.svg" alt="True Wireless Earbuds 3D Render" class="render-img">
+                  <div class="render-floating-tag tag-earbuds">
+                    <span>SoundPods Pro</span>
+                    <strong>₹2,999</strong>
+                  </div>
                 </div>
               </div>
 
               <!-- Floating 3D Loyalty Coin / Chip -->
-              <div class="scene-layer layer-coin" data-depth="0.10">
+              <div class="scene-layer layer-coin" data-depth="0.11">
                 <div class="floating-loyalty-coin">
                   <div class="coin-inner">
                     <i class="fa-solid fa-coins"></i>
@@ -228,7 +237,7 @@
               </div>
 
               <!-- Floating VIP Diamond Chip -->
-              <div class="scene-layer layer-vip" data-depth="0.07">
+              <div class="scene-layer layer-vip" data-depth="0.06">
                 <div class="floating-vip-chip">
                   <i class="fa-solid fa-gem text-cyan"></i>
                   <div>

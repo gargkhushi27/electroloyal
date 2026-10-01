@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <defs>
+    <!-- Screen wallpaper gradient -->
+    <linearGradient id="laptopScreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="40%" stop-color="#7C3AED"/>
+      <stop offset="80%" stop-color="#06B6D4"/>
+      <stop offset="100%" stop-color="#1E1B4B"/>
+    </linearGradient>
+
+    <!-- Metallic bevel gradients -->
+    <linearGradient id="lidBevel" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E2E8F0"/>
+      <stop offset="50%" stop-color="#94A3B8"/>
+      <stop offset="100%" stop-color="#475569"/>
+    </linearGradient>
+
+    <linearGradient id="baseMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#CBD5E1"/>
+      <stop offset="25%" stop-color="#F1F5F9"/>
+      <stop offset="50%" stop-color="#94A3B8"/>
+      <stop offset="75%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#64748B"/>
+    </linearGradient>
+
+    <!-- Keyboard well & trackpad -->
+    <linearGradient id="trackpadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+
+    <!-- Drop shadow -->
+    <filter id="laptopShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="25" stdDeviation="25" flood-color="#0F172A" flood-opacity="0.45"/>
+    </filter>
+
+    <linearGradient id="glassGloss" x1="0%" y1="0%" x2="100%" y2="80%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.25"/>
+      <stop offset="35%" stop-color="#FFFFFF" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <g filter="url(#laptopShadow)">
+    <!-- Base Lower Chassis Drop Lip -->
+    <path d="M 60 330 L 540 330 Q 555 330 545 342 L 515 358 Q 500 364 480 364 L 120 364 Q 100 364 85 358 L 55 342 Q 45 330 60 330 Z" fill="#334155"/>
+    <path d="M 65 332 L 535 332 L 510 354 L 90 354 Z" fill="#1E293B"/>
+
+    <!-- Bottom Chassis (Keyboard Deck - 3D Perspective) -->
+    <polygon points="50,325 550,325 480,240 120,240" fill="url(#baseMetal)"/>
+
+    <!-- Keyboard Deck Edge Highlight -->
+    <polygon points="48,325 552,325 550,330 50,330" fill="#F8FAFC"/>
+
+    <!-- Keyboard Recess -->
+    <polygon points="140,246 460,246 475,295 125,295" fill="#1E293B" rx="4"/>
+
+    <!-- Keyboard Key Rows (Stylized 3D keys) -->
+    <g fill="#0F172A" stroke="#334155" stroke-width="0.8">
+      <!-- Row 1 -->
+      <polygon points="146,249 454,249 456,256 144,256" fill="#1E1B4B"/>
+      <!-- Row 2 -->
+      <polygon points="143,258 457,258 460,266 140,266" fill="#1E1B4B"/>
+      <!-- Row 3 -->
+      <polygon points="139,268 461,268 464,277 136,277" fill="#1E1B4B"/>
+      <!-- Row 4 -->
+      <polygon points="135,279 465,279 469,289 131,289" fill="#1E1B4B"/>
+      <!-- Spacebar row -->
+      <polygon points="130,290 470,290 473,293 127,293" fill="#0F172A"/>
+    </g>
+
+    <!-- Trackpad -->
+    <polygon points="255,298 345,298 350,320 250,320" fill="url(#trackpadGrad)" stroke="#94A3B8" stroke-width="0.8"/>
+
+    <!-- Display Hinge -->
+    <rect x="220" y="235" width="160" height="7" rx="3" fill="#1E293B"/>
+
+    <!-- Screen Bezel (Tilted Back Screen) -->
+    <rect x="110" y="30" width="380" height="210" rx="10" fill="#0F172A" stroke="url(#lidBevel)" stroke-width="4"/>
+
+    <!-- Display Glass Panel -->
+    <rect x="122" y="42" width="356" height="186" rx="4" fill="url(#laptopScreenGrad)"/>
+
+    <!-- Camera Dot -->
+    <circle cx="300" cy="36" r="2.5" fill="#1E293B"/>
+    <circle cx="300" cy="36" r="1" fill="#06B6D4"/>
+
+    <!-- UI Elements On Laptop Screen (Dashboard Preview) -->
+    <!-- Top Nav Bar of UI -->
+    <rect x="130" y="48" width="340" height="14" rx="2" fill="rgba(15, 23, 42, 0.45)"/>
+    <circle cx="140" cy="55" r="2.5" fill="#EF4444"/>
+    <circle cx="148" cy="55" r="2.5" fill="#F59E0B"/>
+    <circle cx="156" cy="55" r="2.5" fill="#10B981"/>
+    <rect x="180" y="52" width="60" height="6" rx="2" fill="rgba(255,255,255,0.4)"/>
+    <rect x="420" y="52" width="40" height="6" rx="3" fill="#6D5DFB"/>
+
+    <!-- Mini Chart inside Laptop -->
+    <path d="M 140 180 Q 200 130 260 150 T 360 110 T 450 85" fill="none" stroke="#22D3EE" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 140 180 Q 200 130 260 150 T 360 110 T 450 85 L 450 200 L 140 200 Z" fill="rgba(34, 211, 238, 0.15)"/>
+
+    <!-- Screen Glass Sheen -->
+    <polygon points="122,42 340,42 200,228 122,228" fill="url(#glassGloss)"/>
+  </g>
+</svg>

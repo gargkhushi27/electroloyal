@@ -2531,13 +2531,13 @@ body {
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* 3D ELECTRONICS VISUAL STAGE */
+/* 3D ELECTRONICS VISUAL STAGE - PREMIUM COMPOSITION */
 .hero-stage-right {
   position: relative;
-  width: 380px;
-  height: 320px;
+  width: 440px;
+  height: 330px;
   flex-shrink: 0;
-  perspective: 1000px;
+  perspective: 1200px;
 }
 
 .scene-3d-wrapper {
@@ -2552,11 +2552,11 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 260px;
-  height: 260px;
+  width: 320px;
+  height: 320px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(109, 93, 251, 0.4) 0%, rgba(6, 182, 212, 0.2) 50%, transparent 70%);
-  filter: blur(28px);
+  background: radial-gradient(circle, rgba(109, 93, 251, 0.45) 0%, rgba(6, 182, 212, 0.22) 45%, transparent 70%);
+  filter: blur(34px);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -2565,8 +2565,8 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 240px;
-  height: 240px;
+  width: 300px;
+  height: 300px;
   transform: translate(-50%, -50%);
   border: 1.5px dashed rgba(255, 255, 255, 0.15);
   border-radius: 50%;
@@ -2582,204 +2582,215 @@ body {
 .scene-layer {
   position: absolute;
   will-change: transform;
-  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Main Flagship Laptop Device */
-.layer-laptop {
-  top: 25px;
-  left: 20px;
-  z-index: 5;
-}
-
-.tech-device-card.device-main {
-  width: 240px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(16px);
-  border-radius: var(--radius-lg);
-  padding: 14px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+/* Product Render Wrapper & Badges */
+.product-render-wrap {
   position: relative;
-  overflow: hidden;
-  transition: transform 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
+  cursor: pointer;
 }
 
-.tech-device-card.device-main:hover {
-  transform: translateY(-4px) scale(1.02);
+.product-render-wrap:hover {
+  transform: scale(1.05) translateY(-4px);
+  filter: drop-shadow(0 15px 25px rgba(109, 93, 251, 0.45));
 }
 
-.device-specular-highlight {
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.35) 50%, transparent 55%);
-  pointer-events: none;
-}
-
-.device-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.device-badge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--purple);
-  background: var(--purple-bg);
-  padding: 3px 8px;
-  border-radius: 12px;
-}
-
-.device-pill-stock {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--success);
-  background: #D1FAE5;
-  padding: 2px 7px;
-  border-radius: 10px;
-}
-
-.device-img-holder {
+.render-img {
+  display: block;
   width: 100%;
-  height: 110px;
+  height: auto;
+  object-fit: contain;
+}
+
+.render-floating-tag {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 3px 9px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-}
-
-.device-preview-img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.15));
-}
-
-.device-info-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  border-top: 1px solid #F1F5F9;
-  padding-top: 8px;
-}
-
-.device-info-bar h4 {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-
-.device-price-tag {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--primary);
-}
-
-.device-pts-badge {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #D97706;
-  background: #FEF3C7;
-  padding: 3px 8px;
-  border-radius: 10px;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: all 0.25s ease;
   white-space: nowrap;
 }
 
-/* Floating Satellite Devices */
-.layer-phone {
+.product-render-wrap:hover .render-floating-tag {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.render-floating-tag span {
+  font-size: 10px;
+  font-weight: 600;
+  color: #E2E8F0;
+}
+
+.render-floating-tag strong {
+  font-size: 10px;
+  font-weight: 800;
+  color: #FBBF24;
+}
+
+/* 1. LAPTOP (Center-Back Anchor) */
+.layer-laptop-product {
   top: 15px;
-  right: 15px;
+  left: 60px;
+  width: 290px;
+  z-index: 3;
+}
+
+.laptop-render .render-img {
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.4));
+}
+
+.tag-laptop {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+}
+.product-render-wrap:hover .tag-laptop {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 2. SMARTPHONE (Front-Left Overlapping Laptop) */
+.layer-phone-product {
+  top: 60px;
+  left: 10px;
+  width: 135px;
   z-index: 6;
 }
 
-.layer-audio {
-  bottom: 25px;
+.phone-render {
+  animation: floatPhone 5s ease-in-out infinite;
+}
+
+@keyframes floatPhone {
+  0%, 100% { transform: translateY(0) rotate(-6deg); }
+  50% { transform: translateY(-7px) rotate(-4deg); }
+}
+
+.phone-render:hover {
+  animation-play-state: paused;
+}
+
+.phone-render .render-img {
+  filter: drop-shadow(0 18px 25px rgba(0, 0, 0, 0.5));
+}
+
+.tag-phone {
+  bottom: 15px;
   left: 10px;
+}
+
+/* 3. OVER-EAR HEADPHONES (Back-Right Floating Depth) */
+.layer-headphones-product {
+  top: -5px;
+  right: 15px;
+  width: 175px;
+  z-index: 4;
+}
+
+.headphones-render {
+  animation: floatHeadphones 6s ease-in-out infinite;
+}
+
+@keyframes floatHeadphones {
+  0%, 100% { transform: translateY(0) rotate(8deg); }
+  50% { transform: translateY(-9px) rotate(6deg); }
+}
+
+.headphones-render:hover {
+  animation-play-state: paused;
+}
+
+.headphones-render .render-img {
+  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, 0.45));
+}
+
+.tag-headphones {
+  top: 15px;
+  right: 0px;
+}
+
+/* 4. SMARTWATCH (Foreground-Right Side) */
+.layer-watch-product {
+  bottom: 25px;
+  right: 25px;
+  width: 120px;
   z-index: 7;
 }
 
-.layer-watch {
-  bottom: 30px;
-  right: 25px;
-  z-index: 6;
+.watch-render {
+  animation: floatWatch 4.5s ease-in-out infinite;
 }
 
-.floating-device-orb {
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(12px);
-  border-radius: var(--radius-md);
-  padding: 8px 10px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+@keyframes floatWatch {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-6px) rotate(-2deg); }
 }
 
-.orb-phone {
-  width: 120px;
+.watch-render:hover {
+  animation-play-state: paused;
 }
 
-.orb-phone img {
-  width: 32px;
-  height: 38px;
-  object-fit: contain;
+.watch-render .render-img {
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.45));
 }
 
-.orb-meta strong {
-  display: block;
-  font-size: 11px;
-  color: var(--text-dark);
+.tag-watch {
+  bottom: 10px;
+  right: 5px;
 }
 
-.orb-meta small {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--purple);
+/* 5. WIRELESS EARBUDS & CASE (Foreground-Center Floating) */
+.layer-earbuds-product {
+  bottom: 10px;
+  left: 130px;
+  width: 140px;
+  z-index: 8;
 }
 
-.orb-audio {
-  padding: 6px 10px;
+.earbuds-render {
+  animation: floatEarbuds 4s ease-in-out infinite;
 }
 
-.orb-audio img {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
+@keyframes floatEarbuds {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
-.orb-badge {
-  font-size: 10px;
-  font-weight: 700;
-  color: #D97706;
-  background: #FEF3C7;
-  padding: 2px 6px;
-  border-radius: 8px;
+.earbuds-render:hover {
+  animation-play-state: paused;
 }
 
-.orb-watch img {
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
+.earbuds-render .render-img {
+  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.4));
+}
+
+.tag-earbuds {
+  top: 5px;
+  left: 20px;
 }
 
 /* Floating 3D Loyalty Coin */
 .layer-coin {
-  top: 140px;
-  right: 5px;
-  z-index: 8;
+  top: 30px;
+  right: 175px;
+  z-index: 9;
 }
 
 .floating-loyalty-coin {
   position: relative;
-  width: 58px;
-  height: 58px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: linear-gradient(135deg, #F59E0B, #D97706);
   border: 2px solid #FDE68A;
@@ -2804,34 +2815,34 @@ body {
 }
 
 .coin-inner i {
-  font-size: 12px;
+  font-size: 11px;
   margin-bottom: 2px;
 }
 
 .coin-inner span {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
 }
 
 .coin-inner small {
-  font-size: 8px;
+  font-size: 7.5px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 /* Floating VIP Diamond Chip */
 .layer-vip {
-  bottom: 15px;
-  right: 120px;
-  z-index: 8;
+  bottom: 20px;
+  left: 15px;
+  z-index: 9;
 }
 
 .floating-vip-chip {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.88);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(6, 182, 212, 0.4);
   border-radius: 24px;
-  padding: 6px 12px;
+  padding: 5px 12px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2841,12 +2852,12 @@ body {
 
 .floating-vip-chip strong {
   display: block;
-  font-size: 11px;
+  font-size: 10.5px;
   color: #22D3EE;
 }
 
 .floating-vip-chip small {
-  font-size: 9.5px;
+  font-size: 9px;
   color: #94A3B8;
 }
 

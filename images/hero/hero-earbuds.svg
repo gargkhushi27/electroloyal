@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" width="100%" height="100%">
+  <defs>
+    <!-- Ceramic White / Pearlescent Body -->
+    <radialGradient id="caseLid" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="40%" stop-color="#F1F5F9"/>
+      <stop offset="80%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </radialGradient>
+
+    <!-- Earbud Stem Gradient -->
+    <linearGradient id="budGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="50%" stop-color="#E2E8F0"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+
+    <!-- Metallic Acoustic Mesh Grille -->
+    <radialGradient id="meshDark" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </radialGradient>
+
+    <!-- Drop Shadow -->
+    <filter id="budsShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="15" flood-color="#0F172A" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#budsShadow)">
+    <!-- CHARGING CASE BASE -->
+    <ellipse cx="140" cy="180" rx="90" ry="60" fill="url(#caseLid)" stroke="#F8FAFC" stroke-width="2"/>
+    <!-- Case Split Line & LED -->
+    <path d="M 52 178 C 90 195, 190 195, 228 178" fill="none" stroke="#94A3B8" stroke-width="1.5"/>
+    <circle cx="140" cy="192" r="3" fill="#10B981"/>
+    <circle cx="140" cy="192" r="6" fill="#10B981" opacity="0.3"/>
+
+    <!-- LEFT EARBUD (Floating slightly above case) -->
+    <g transform="translate(45, 20) rotate(-18 70 70)">
+      <!-- Silicone Ear Tip -->
+      <ellipse cx="62" cy="50" rx="14" ry="18" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <ellipse cx="60" cy="50" rx="7" ry="11" fill="url(#meshDark)"/>
+      <!-- Main Earbud Head -->
+      <ellipse cx="80" cy="55" rx="22" ry="24" fill="url(#budGrad)" stroke="#FFFFFF" stroke-width="1.5"/>
+      <!-- Acoustic Vent -->
+      <ellipse cx="88" cy="46" rx="4" ry="7" fill="url(#meshDark)"/>
+      <!-- Downward Stem -->
+      <rect x="75" y="68" width="12" height="42" rx="6" fill="url(#budGrad)" stroke="#E2E8F0" stroke-width="1"/>
+      <!-- Silver Charging Tip -->
+      <path d="M 75 104 L 87 104 L 85 110 L 77 110 Z" fill="#94A3B8"/>
+    </g>
+
+    <!-- RIGHT EARBUD (Floating beside case) -->
+    <g transform="translate(160, 35) rotate(22 70 70)">
+      <!-- Silicone Ear Tip -->
+      <ellipse cx="98" cy="50" rx="14" ry="18" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+      <ellipse cx="100" cy="50" rx="7" ry="11" fill="url(#meshDark)"/>
+      <!-- Main Earbud Head -->
+      <ellipse cx="80" cy="55" rx="22" ry="24" fill="url(#budGrad)" stroke="#FFFFFF" stroke-width="1.5"/>
+      <!-- Acoustic Vent -->
+      <ellipse cx="72" cy="46" rx="4" ry="7" fill="url(#meshDark)"/>
+      <!-- Downward Stem -->
+      <rect x="73" y="68" width="12" height="42" rx="6" fill="url(#budGrad)" stroke="#E2E8F0" stroke-width="1"/>
+      <!-- Silver Charging Tip -->
+      <path d="M 73 104 L 85 104 L 83 110 L 75 110 Z" fill="#94A3B8"/>
+    </g>
+  </g>
+</svg>
